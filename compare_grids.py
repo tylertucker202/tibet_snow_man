@@ -6,7 +6,7 @@ Created on Fri Jan 13 21:08:38 2017
 """
 
 import os
-from snowCode import makeSnowDF
+from snowCode import makeSnowHDFStore
 from plot_snow_on_map import plotSnow
 import pandas as pd
 import pdb
@@ -20,18 +20,18 @@ import datetime
 output_dir = os.getcwd()+'/output/'+'grid_compare/'
 home_dir = os.getcwd()
 data_dir = home_dir+'/data/'
-input_zip_dir_24km = data_dir+'grid_compare/24km/'
+input_zip_dir_24km = data_dir+'grid_compare/4km_1/'
 lat_long_area_filename_24km = 'lat_long_centroids_area_24km.csv'
 lat_long_coords = {'lower_lat':25,'upper_lat':45,'lower_long':65,'upper_long':105} #set as lower and upper bounds for lat and long
 
 
-makeDF_24km = makeSnowDF(data_dir,lat_long_area_filename_24km,lat_long_coords)
+makeHDF_24km = makeSnowHDFStore(data_dir,lat_long_area_filename_24km,lat_long_coords)
 
 if not os.path.exists(output_dir):
     os.makedirs(output_dir)
 
-df_24km = makeDF_24km.createTimeSeriesDf(input_zip_dir_24km) 
-df_24km.to_csv(output_dir+'/24km.csv')
+makeHDF_24km.make_hdf5_files(input_zip_dir_24km) 
+
 
 
 lat_long_area_filename_24km = 'lat_long_centroids_area_24km.csv'   
@@ -54,10 +54,9 @@ df_24km.to_csv(output_dir+'/24km.csv')
 input_zip_dir_4km = data_dir+'grid_compare/4km/'
 lat_long_area_filename_4km = 'lat_long_centroids_area_4km.csv'
 
-makeDF_4km = makeSnowDF(data_dir,lat_long_area_filename_4km,lat_long_coords)
+makeHDF_4km = makeSnowHDFStore(data_dir,lat_long_area_filename_4km,lat_long_coords)
 
-df_4 = makeDF_4km.createTimeSeriesDf(input_zip_dir_4km) 
-df_4.to_csv(output_dir+'/4km.csv')
+makeHDF_4km.make_hdf5_files(input_zip_dir_4km)
 df_to_plot_4km = pd.read_csv(output_dir+'/4km.csv')
 s_4km = plotSnow(lat_long_area_filename_4km,lat_long_coords)
 
