@@ -116,13 +116,16 @@ class grid_and_area:
             except:
                 self.centroids.ix[(col_abs,row_abs)]
                 pdb.set_trace()
-                          
+                
+    def PolyArea(self,x,y):                     
+        #shoestring formula is applied for for points centered around row,col
+        return 0.5*np.abs(np.dot(x,np.roll(y,1))-np.dot(y,np.roll(x,1)))/(10**6) #converted  from m^2 into km^2
         
     def makeAreas(self):
         
         #shoestring formula is applied for for points centered around row,col
         def PolyArea(x,y):
-            return 0.5*np.abs(np.dot(x,np.roll(y,1))-np.dot(y,np.roll(x,1)))/(10**6)
+            return 0.5*np.abs(np.dot(x,np.roll(y,1))-np.dot(y,np.roll(x,1)))/(10**6) #converted  from m^2 into km^2
 
         
         xx = self.centroids['x'].unstack(level=0).values
@@ -135,7 +138,7 @@ class grid_and_area:
             try:
                 inp_x = [xx[row,col-1], xx[row,col], xx[row-1,col], xx[row-1,col-1]]
                 inp_y = [yy[row,col-1], yy[row,col], yy[row-1,col], yy[row-1,col-1]]
-                self.centroids.at[(col_abs,row_abs), 'area'] = PolyArea(inp_x,inp_y)
+                self.centroids.at[(col_abs,row_abs), 'area'] = self.PolyArea(inp_x,inp_y)
             except:
 
                 pdb.set_trace()   

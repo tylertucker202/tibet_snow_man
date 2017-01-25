@@ -16,9 +16,10 @@ import logging
 from mpl_toolkits.basemap import Basemap, cm
 from matplotlib.colors import LinearSegmentedColormap
 from scipy.interpolate import griddata
+import datetime
 #plt.ioff()
 
-class makeSnowDF:
+class makeSnowHDFStore:
     def __init__(self,code_dir,lat_long_filename,lat_long_coords):
         logging.debug('initializing object')
         self.code_dir = code_dir
@@ -30,177 +31,13 @@ class makeSnowDF:
         self.coords = lat_long_coords
         self.lat_long_filename = lat_long_filename
         self.df = pd.read_csv(self.code_dir+self.lat_long_filename, index_col=(0,1))
-            
-    def computeMonthlyAverage(self,input_df):        
-        days_per_month = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
-        days_per_month_ly = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]        
-        cum_days = {}
-        cum_days[0] = 0
-        cum_days_ly = {}
-        cum_days_ly[0] = 0
-                
-        col_bins = {1:[], 2:[], 3:[], 4:[], 5:[], 6:[], 7:[], 8:[], 9:[], 10:[], 11:[], 12:[]}
-        #col_bins = {'jan':[], 'feb':[], 'mar':[], 'april':[], 'may':[], 'june':[], 'july':[], 'aug':[], 'sept':[], 'oct':[], 'nov':[], 'dec':[]}
-        
-        #only snow and ice are captured
-        def snow_and_ice(x):
-            if x==4 or x==3:
-                x=1 
-            else: 
-                x=0
-            return x
-            
-        #only consider snow and ice over areas. 
-        #pdb.set_trace()
-        input_df = input_df.applymap(snow_and_ice)  
-        
-        for month, days in enumerate(days_per_month):
-            cum_days[month+1] = cum_days[month] + days_per_month[month]
-            cum_days_ly[month+1] = cum_days_ly[month] + days_per_month_ly[month]
-        cum_days.popitem() #removes 0th month
-        cum_days_ly.popitem() #removes 0th month
-        #print ('cumulative days:{}'.format(cum_days))
-        #print ('cumulative leapyear days:{}'.format(cum_days_ly))
-        #loop over columns
-
-        for col in input_df.columns:
-            year, day = col.split('_')
-            year = int(year)
-            day = int(day)
-        
-            if year%4 == 0: #use leapyear 
-                month_bin = cum_days_ly
-                days_in_month = days_per_month_ly
-            elif year%4 != 0:
-                month_bin = cum_days
-                days_in_month = days_per_month
-            #determine which month bin day belongs.
-            
-            try:
-                my_list = map(lambda x: x - day, month_bin.values())
-                my_month = my_list.index(min(x for x in my_list if x >= 0))+1
-                col_bins[my_month].append(col)
-            except ValueError as err:
-                print('value error found: {0}'.format(err))
-                pdb.set_trace()
-            except KeyError:
-                print('key error found')
-                pdb.set_trace()
-                
-        #check if col_bins length lines up with days in month
-        for month in col_bins.keys():
-            bin_Length = len(col_bins[month])
-            #pdb.set_trace()
-            if bin_Length != days_in_month[month-1]:
-                logging.warning('number of days do not match. check if data present for year: {0} and month: {1}'.format(year, month))
-            
-        df_month = pd.DataFrame()
-        
-        for month in col_bins.keys():
-            month_avg = input_df[ col_bins[month] ].mean(axis = 1)
-            df_month[str(year)+'_'+str(month)] = month_avg
-    
-        #return df 
-    
-        return df_month    
-            
-    def createTimeSeriesDf(self,directory):
-        logging.debug('adding snow data to dataframe:' )  
-
         self.lat_long_indicies = self.df.index.tolist()
-        output_df = pd.DataFrame()
-        logging.debug('changing directory to: {0}'.format(directory))
-
-        if not os.path.exists(directory):
-            pdb.set_trace()
-            logging.warning('directory does not exist: {0}'.format(directory))
-            
-        for path, dirs, files in os.walk(directory):
-            logging.debug('path: {}'.format(path))
-            logging.debug('dirs: {}'.format(dirs))
-            for filename in [f for f in files if f.endswith(".gz")]:
-                logging.debug('reading file: {}'.format(filename))
-                
-                with gzip.open(os.path.join(path, filename), 'r') as f:
-                    content = f.read()
-                    lines = content.split('\n')
-                    
-                    threashold = 75
-                    for i, line in enumerate(lines[0:100]): 
-                        if re.search('0{30,}', line):
-                            logging.info('data found at index: {}'.format(i))
-                            header = lines[0:i-1]
-                            body = lines[i:-1]
-                            int_body = body
-                            for i, line in enumerate(body):
-                                try:
-                                    line = line.strip('\r') #sometimes there is a newline
-                                    int_body[i] = [int(c) for c in line]
-                                except ValueError as err:
-                                    pdb.set_trace()
-                                    logging.warning('value error: {0}'.format(err))
-                            body_m = np.matrix(int_body)
-                            
-                            #need to flip matrix from left to right.
-                            body_m = np.fliplr(body_m)
-                            
-                            
-                            list(map(lambda x: body_m[x], self.lat_long_indicies))
-                            colName = filename.split('_', 1)[0].replace('ims', '')
-                            colName = colName[0:4]+'_'+colName[4:]
-                            try:                                
-                                output_df[colName] = list(map(lambda x: body_m[x], self.lat_long_indicies))
-                                logging.debug('column name added: {}'.format(colName)) 
-                            except:
-                                pdb.set_trace()
-                                logging.warning('column name not added: {}'.format(colName))
-                                pass
-                            
-                            break
-                        
-                        if re.search('0    0    0    0    0    0    0    0', line):
-                            logging.info('data found at index: {}'.format(i))
-                            logging.debug('unpacked data found for filename: {}'.format(filename))
-                            header = lines[0:i-1]
-                            body = lines[i:-1]
-                            int_body = []
-                            for i, line in enumerate(body):
-                                line = line.replace(' ','')
-                                line = line.replace('164','3')
-                                line = line.replace('165','4')
-                                int_body.append([int(c) for c in line]) 
-                            colName = filename.split('_', 1)[0].replace('ims', '')
-                            colName = colName[0:4]+'_'+colName[4:]    
-                            #pdb.set_trace()
-                            flat_body = [item for sublist in int_body for item in sublist]
-                            body_m = np.matrix([flat_body])
-                            #need to flip matrix from left to right.
-                            body_m = np.fliplr(body_m)
-                            body_m=body_m.reshape(1024,1024)
-                            reduced_body = list(map(lambda x: body_m[x], self.lat_long_indicies)) 
-                            flat_body_land = self.add_land(reduced_body)   
-                            
-                            try:                                
-                                output_df[colName] = flat_body_land
-                                                                
-                                logging.debug('column name added: {}'.format(colName)) 
-                            except:
-                                pdb.set_trace()
-                                logging.warning('column name not added: {}'.format(colName))
-                                pass                                                   
-                            break 
-                        
-                                               
-                        if i > threashold: #TODO: need to format the body for files with spaces in zeros
-                            logging.error('cant distinguish header for filename: {}'.format(filename))
-                            break              
-        return output_df
                         
     #value error if this function is defined in add_land                    
     def build_terrain(self,x,y):                                    
-        if y == 2:
+        if y == 1:
             logging.warning( 'thats odd, water is reported on my matrix')
-        if y == 3: 
+        if y == 2:
             logging.warning( 'thats odd, land is being reported on my matrix')
         if self.logic_matrix[x,y] == 0:
             return x
@@ -219,36 +56,182 @@ class makeSnowDF:
             noSnowLen = len(self.df['noSnowMap'].values.tolist())
             logging.error('lists have to be the same length: {0}'.format(err))
         
-    def make_monthly_averaged_df(self,output_dir):
-        df_monthly = pd.DataFrame(columns = ['remove_me'])
-        os.chdir(output_dir)        
-        file_names = sorted(glob.glob("*.csv"), key = lambda x: x.rsplit('.', 1)[0])
-        for file in file_names:
-            df = pd.read_csv(file, index_col=0)
-            df_avg = self.computeMonthlyAverage(df)
-            try:
-                df_monthly = pd.concat([df_monthly, df_avg], axis=1)
-                print('added yearly data from file: {}'.format(file))
-            except ValueError as err:
-                print('check number of rows in file:{}'.format(file))
-                pdb.set_trace()
-
-        df_monthly.drop('remove_me',1, inplace=True)
-        pdb.set_trace()
-        os.chdir(output_dir) 
-        df_monthly.to_csv('monthly_averages_test.csv')
-
-    def make_csv_files(self,zip_dir):
+    def make_hdf5_files(self,zip_dir):
         output_dir = os.getcwd()+'/output/'+zip_dir
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
-        os.chdir('data/'+zip_dir)
-        for path, dirs, files in os.walk('.'):
+        #os.chdir(zip_dir)
+        for path, dirs, files in os.walk(zip_dir):
             for folder_name in dirs:
                 print('in dir:{0} '.format(folder_name))
-                df_year = self.createTimeSeriesDf(folder_name)
-                os.chdir('..')
-                df_year.to_csv(output_dir+folder_name+'.csv')
+                print(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+
+                year_store = pd.HDFStore(output_dir+folder_name+'.h5')
+                
+                self.createTimeSeriesHDF5(zip_dir+folder_name,year_store)
+                #df_year.to_csv(output_dir+folder_name+'.csv')
                 print('done and file saved, moving on from {0} '.format(folder_name))
+                year_store.close
+                print(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         print('all done')
+
+    def make_coverage_df(self,output_dir):
         
+        data_perc_cov = []
+        data_cov = []
+        index_ts = []      
+        file_names = sorted(glob.glob(output_dir+"*.h5"), key = lambda x: x.rsplit('.', 1)[0])
+        #only snow and ice are captured (1), else 0
+        def snow_and_ice(x):
+            if x==4 or x==3:
+                x=1 
+            else: 
+                x=0
+            return x        
+        
+        total_area = self.df['area'].sum()
+        for f in file_names:
+            with pd.HDFStore(f) as year_store:
+                for series_name in year_store.keys():
+                    s_snow_ice = np.array(map(lambda x: snow_and_ice(x), year_store[series_name].values))
+                    if np.sum(s_snow_ice) == 0:
+                        logging.warning('check {0}. it contains no snow and ice:'.format(series_name) ) 
+                        pdb.set_trace()
+                    snow_ice_area = np.dot(s_snow_ice, self.df['area'].values)
+                    timestamp = series_name.strip('/series_')
+                    index_ts.append(timestamp)
+                    perc_cov = np.divide(snow_ice_area, total_area)
+                    data_perc_cov.append(perc_cov)
+                    data_cov.append(snow_ice_area)
+           
+        index_datetime = pd.to_datetime(index_ts, format='%Y_%m_%d')
+        df = pd.DataFrame(columns = ['perc coverage', 'coverage (km^2)'], index = index_datetime)
+        df.index.name = 'timestamp'        
+        df['perc coverage'] = data_perc_cov
+        df['coverage (km^2)'] = data_cov   
+        return df
+
+    
+    def createTimeSeriesHDF5(self,directory,year_store):
+        logging.debug('adding snow data to dataframe:' )  
+
+        #output_df = pd.DataFrame() replaced with year_store
+
+        if not os.path.exists(directory):
+            pdb.set_trace()
+            logging.warning('directory does not exist: {0}'.format(directory))
+            
+        for path, dirs, files in os.walk(directory):
+            logging.debug('path: {0} \n dirs: {1}'.format(path,dirs))
+            for filename in [f for f in files if f.endswith(".gz")]:
+                logging.debug('reading file: {}'.format(filename))
+                
+                colName = filename.split('_', 1)[0].replace('ims', '')
+                colName = colName[0:4]+'_'+colName[4:]
+                dt = datetime.datetime.strptime(colName,'%Y_%j')
+                series_name = dt.strftime('series_%Y_%m_%d')
+
+                with gzip.open(os.path.join(path, filename), 'r') as f:
+                    content = f.read()
+                    lines = content.split('\n')
+                    
+                    nominally_formatted_bool, body = self.check_if_nominally_formatted(lines, filename)
+                    
+                    if nominally_formatted_bool:
+                        try:
+                            data = self.parse_normally_formatted_file(body, filename)
+                        except:
+                            pdb.set_trace()
+                            logging.warning('cant distinguish data for filename: {}. Not added'.format(filename))
+                            pass
+                    elif not nominally_formatted_bool:
+                        try:
+                            data = self.parse_alternatively_formatted_file(body,filename)
+                        except:
+                            pdb.set_trace()
+                            logging.warning('cant distinguish data for filename: {}. Not added'.format(filename))
+                            pass
+
+                    if not 4 in data:
+                        logging.warning('no snow reported for filename: {}'.format(filename))
+
+                    s = pd.Series(data)
+                    year_store[series_name] = s                    
+                    logging.debug('added series for filename: {}'.format(filename))
+                    
+
+
+    def check_if_nominally_formatted(self,lines,filename):
+        threashold = 75
+        for i, line in enumerate(lines[0:100]): 
+            if re.search('0{30,}', line):
+                logging.info('data found at index: {}'.format(i))
+                nominally_formatted_bool = True
+                break
+
+            if re.search('0    0    0    0    0    0    0    0', line):
+                logging.info('data found at index: {}'.format(i))
+                logging.debug('unpacked data found for filename: {}'.format(filename))
+                nominally_formatted_bool = False
+                break
+            if i > threashold: #TODO: need to format the body for files with spaces in zeros
+                pdb.set_trace()
+                logging.error('cant distinguish header for filename: {}'.format(filename))
+                break 
+        header = lines[0:i-1]
+        body = lines[i:-1] 
+        return (nominally_formatted_bool, body)
+                        
+    def parse_normally_formatted_file(self,body,filename):
+        """
+        Normally, the files are in a nxn matrix, with no spaces. This function
+        will flatten out the body into a list and filter the
+        points included in the lat_long_indicies
+        """
+        int_body = body
+        for i, line in enumerate(body):
+            try:
+                line = line.strip('\r') #sometimes there is a newline
+                int_body[i] = [int(c) for c in line]
+            except ValueError as err:
+                logging.warning('value error: {0}'.format(err))
+                logging.warning('not going to add this data: {}'.format(filename))
+                pass
+        body_m = np.matrix(int_body)
+        
+        #need to flip matrix from left to right.
+        body_m = np.fliplr(body_m)
+
+        data = list(map(lambda x: body_m[x], self.lat_long_indicies))
+
+        return data
+        
+    def parse_alternatively_formatted_file(self,body, filename):
+        """
+        Some files are of a different format. ice is set as 164 and snow as 165.
+        Also, the shape is not quite the same nxn matrix. This also contains
+        spaces that need to be removed. Lastly, this format contains no land
+        and sea indicators (1,2). This function adds it back in via add_land.
+        Once these fomatting changes are made, This function will flatten out
+        the body into a list and filter the points included in the 
+        lat_long_indicies.
+        """                            
+        int_body = []
+        for i, line in enumerate(body):
+            line = line.replace(' ','')
+            line = line.replace('164','3')
+            line = line.replace('165','4')
+            int_body.append([int(c) for c in line]) 
+        try:
+            flat_body = [item for sublist in int_body for item in sublist]
+            body_m = np.matrix([flat_body])
+            #need to flip matrix from left to right.
+            body_m=body_m.reshape(1024,1024) #only occurs in 24km grid
+            body_m = np.fliplr(body_m)
+            reduced_body = list(map(lambda x: body_m[x], self.lat_long_indicies)) 
+            flat_body_land = self.add_land(reduced_body) 
+        except ValueError as err:
+                logging.warning('value error: {0}'.format(err))
+                logging.warning('not going to add this data: {}'.format(filename))
+                pass
+        return flat_body_land
