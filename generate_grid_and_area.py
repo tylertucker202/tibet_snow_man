@@ -29,19 +29,16 @@ class grid_and_area:
         logging.debug('initializing dataframe' )
         #df only contains lat, long, areas
         #nxn grid is indexed by row and column, thus a multiIndex method is used.
-        index = []
-        for col in range(0, self.grid_size):
-            for row in range(0,self.grid_size):
-                index.append((col,row))
-        df_index = pd.MultiIndex.from_tuples(index, names = ['col','row'])
+        XY = np.mgrid[0:self.grid_size:1,0:self.grid_size:1].reshape(2,-1).T       
+        df_index = pd.MultiIndex.from_arrays( [XY[:,0], XY[:,1]], names = ['row','col'])
         self.df = pd.DataFrame(columns = ['lat', 'long'], index = df_index)
-        self.centroids = pd.DataFrame(columns = ['lat', 'long', 'centroid_lat', 'centroid_long'], index = df_index)
+        self.centroids = pd.DataFrame(columns = ['lat', 'long', 'centroid_lat', 'centroid_long', 'area_points'], index = df_index)
         
     def addLatLong(self, lat_filename,long_filename):
         logging.debug('getting Latitude and Longitude arrays:' )
         path = self.data_dir                                  
         try: 
-            with open(path+lat_filename, "r") as f:
+            with open(os.path.join(os.getcwd(),path,lat_filename), "r") as f:
                 lat_array = np.fromfile(f, dtype=np.float32)               
                 #list starts at bottom left corner. need to rearrange
                 lat_l = lat_array.tolist()
@@ -53,7 +50,7 @@ class grid_and_area:
                 logging.debug('lat array loaded')
                 self.centroids['lat'] = lat_flat
                 self.lat_chunks = lat_chunks
-            with open(path+long_filename, "r") as f:
+            with open(os.path.join(os.getcwd(),path,long_filename), "r") as f:
                 long_array = np.fromfile(f, dtype=np.float32)
                 long_l = long_array.tolist()               
                 long_chunks = [long_l[x:x+self.grid_size] for x in xrange(0, len(long_l), self.grid_size)]
@@ -64,6 +61,10 @@ class grid_and_area:
                 self.long_chunks = long_chunks
         except:
             pdb.set_trace()
+            os.path.exists(os.path.abspath(os.path.join(os.getcwd() , os.pardir, 'data')))
+            os.path.exists(os.path.join(os.getcwd(),path))
+            os.listdir(os.path.join(os.getcwd(),path))
+            os.path.isfile(os.path.join(os.getcwd(),path,long_filename))
             logging.error('files were not loaded...check path?')
             
             
@@ -83,6 +84,7 @@ class grid_and_area:
         self.col_min = self.df['col'].min()
         self.row_min = self.df['row'].min()
         self.df.set_index(['col', 'row'], inplace = True)
+        self.df['id'] = range(0, len(self.lat_long_indicies))
         
 
     def makeCentroids(self):
@@ -123,18 +125,19 @@ class grid_and_area:
         
     def makeAreas(self):
         
-        #shoestring formula is applied for for points centered around row,col
-        def PolyArea(x,y):
-            return 0.5*np.abs(np.dot(x,np.roll(y,1))-np.dot(y,np.roll(x,1)))/(10**6) #converted  from m^2 into km^2
 
         
         xx = self.centroids['x'].unstack(level=0).values
         yy = self.centroids['y'].unstack(level=0).values
         
-        for col_abs,row_abs in self.lat_long_indicies:
+        cent_lat = self.centroids['x'].unstack(level=0).values
+        cent_long = self.centroids['y'].unstack(level=0).values
+        
+        for row_abs,col_abs in self.lat_long_indicies: #for some reason, the order switches
             row = row_abs-self.row_min+1
             col = col_abs-self.col_min+1
             #pdb.set_trace()
+            
             try:
                 inp_x = [xx[row,col-1], xx[row,col], xx[row-1,col], xx[row-1,col-1]]
                 inp_y = [yy[row,col-1], yy[row,col], yy[row-1,col], yy[row-1,col-1]]
@@ -143,7 +146,14 @@ class grid_and_area:
 
                 pdb.set_trace()   
                 self.centroids.ix[(col_abs,row_abs)]
-    
+            
+            try:
+                #area_points = {'bottom_left':(row,col-1) , 'bottom_right':(row,col), 'top_right':(row-1,col) ,'top_left':(row-1,col-1) }
+                area_points = {'bottom_left':(col_abs-1,row_abs) , 'bottom_right':(col_abs,row_abs), 'top_right':(col_abs,row_abs-1) ,'top_left':(col_abs-1,row_abs-1) }
+                
+                self.centroids.at[(col_abs,row_abs), 'area_points'] = area_points
+            except:
+                pdb.set_trace()
     def addAreas(self):      
 
         #basemap is used to convert points from lat, long to m in x and y. laea projection conserves area
@@ -177,7 +187,7 @@ class grid_and_area:
         logging.debug('getting map with no snow and ice, used for uncompressed plots, as they don\'t distinguish between land and sea')                
         logging.debug('reading file: {}'.format(filename))
 
-        with open(path+os.path.join(filename), 'r') as f:
+        with open(os.path.join(path,filename), 'r') as f:
             content = f.read()
             lines = content.split('\n')
             
@@ -237,10 +247,6 @@ class grid_and_area:
         self.df['noSnowMap'] = list(map(lambda x: no_snow_matrix[x], self.lat_long_indicies))
         self.df['noSnowMapRBG'] = list(map(lambda x: self.rbg_no_snow_matrix[x], self.lat_long_indicies))
 
-    
-
-    
-
 def get_24x24_param():
     no_snow_planet_name = 'dry_planet_24km.asc'
     lat_grid_filename = 'imslat_24km.bin'
@@ -261,8 +267,8 @@ if __name__ == '__main__':
     logging.basicConfig(filename='grid_and_area.log',level=logging.WARNING)
     logging.debug('Start of log file')     
     home_dir = os.getcwd()
-    data_dir = home_dir+'/data/'
-    
+
+    data_dir = os.path.join(home_dir,'data')
     grid_size, no_snow_planet_name, lat_grid_filename, lon_grid_filename, lat_long_area_filename = get_24x24_param()
     #grid_size, no_snow_planet_name, lat_grid_filename, lon_grid_filename, lat_long_area_filename = get_4x4_param()
 
@@ -281,7 +287,7 @@ if __name__ == '__main__':
     #tibet falls approximatly in this region.
     grid_maker.addAreas()
     
-    grid_maker.df.to_csv(data_dir+lat_long_area_filename) 
+    grid_maker.df.to_csv(os.path.join(data_dir,lat_long_area_filename) )
     asdf = grid_maker.df[ grid_maker.df['area'] < 100]
 
     

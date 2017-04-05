@@ -18,15 +18,15 @@ import datetime
 import pdb
 
 class plotSnow:
-    def __init__(self,lat_long_area_filename,lat_long_coords):
+    def __init__(self,data_dir, lat_long_area_filename,lat_long_coords):
         self.lat_long_coords = lat_long_coords
-        self.df_lat_long = pd.read_csv('data/'+lat_long_area_filename)
+        self.df_lat_long = pd.read_csv(os.path.join(data_dir,lat_long_area_filename))
         self.set_up_grid()
 
     def makeMap(self,proj='merc'):
         plt.cla()
         coords = self.lat_long_coords
-        
+
         center = ((coords['upper_long']-coords['lower_long'])/2+coords['lower_long'],(coords['upper_lat']-coords['lower_lat'])/2+coords['lower_lat'])
         
         if proj == 'ortho':
@@ -101,8 +101,9 @@ class plotSnow:
                     if show:
                         plt.show()
                     if save:
-                        plot_dir = output_dir+'/plots/'
+                        plot_dir = os.path.join(output_dir,'plots')
                         if not os.path.exists(plot_dir):
                             os.makedirs(plot_dir)
-                        plt.savefig(plot_dir+timestamp+'.png')
+                        plt.savefig(os.path.join(plot_dir,timestamp+'.png'))
                         plt.close()
+        

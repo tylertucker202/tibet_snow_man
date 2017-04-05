@@ -15,6 +15,7 @@ import numpy as np
 import datetime
 import pandas as pd
 import pdb
+import matplotlib.pyplot as plt
 
 class grid_and_area_unit_tests(unittest.TestCase):
 
@@ -22,7 +23,7 @@ class grid_and_area_unit_tests(unittest.TestCase):
     def setUp(self):
         print('unit tests. setUp function called.')   
         self.home_dir = os.getcwd()
-        self.data_dir = self.home_dir+'/data/'
+        self.data_dir = os.path.join(self.home_dir,'data')
         self.no_snow_planet_name =  'dry_planet_24km.asc'
         self.lat_grid_filename = 'imslat_24km.bin'
         self.lon_grid_filename = 'imslon_24km.bin'
@@ -42,7 +43,7 @@ class grid_and_area_unit_tests(unittest.TestCase):
         
         centroids = grid_maker.centroids
         
-        self.assertEqual( centroids.columns.tolist(),['lat', 'long', 'centroid_lat', 'centroid_long'], 'df columns not set up properly')
+        self.assertEqual( centroids.columns.tolist(),['lat', 'long', 'centroid_lat', 'centroid_long', 'area_points'], 'df columns not set up properly')
         self.assertEqual( centroids.count()['lat'], 0,'set should be empty')
         self.assertEqual( centroids.count()['long'], 0,'set should be empty')
         self.assertEqual( centroids.count()['centroid_lat'], 0,'set should be empty')
@@ -75,10 +76,16 @@ class grid_and_area_unit_tests(unittest.TestCase):
         grid_maker.addLatLong(self.lat_grid_filename,self.lon_grid_filename)
         grid_maker.reduceLatLong()
         
-        self.assertEqual(grid_maker.col_max,831,'col max should be 831')
-        self.assertEqual(grid_maker.row_max,538,'row max should be 538')
-        self.assertEqual(grid_maker.col_min,683,'col min should be 683')
-        self.assertEqual(grid_maker.row_min,328,'row min should be 328')
+        
+        self.assertEqual(grid_maker.row_max,831,'col max should be 831')
+        self.assertEqual(grid_maker.col_max,538,'row max should be 538')
+        self.assertEqual(grid_maker.row_min,683,'col min should be 683')
+        self.assertEqual(grid_maker.col_min,328,'row min should be 328')
+
+#        self.assertEqual(grid_maker.col_max,831,'col max should be 831')
+#        self.assertEqual(grid_maker.row_max,538,'row max should be 538')
+#        self.assertEqual(grid_maker.col_min,683,'col min should be 683')
+#        self.assertEqual(grid_maker.row_min,328,'row min should be 328')
         
     def test_makeCentroids(self):
         print('Inside test_makeCentroids')
@@ -87,8 +94,8 @@ class grid_and_area_unit_tests(unittest.TestCase):
         grid_maker.reduceLatLong()
         grid_maker.makeCentroids()
         
-        col,row = (700,400)     
-        
+        #col,row = (700,400)     
+        row,col = (700,400)  
         #pdb.set_trace()
         ul_lat = grid_maker.df.ix[(col,row)].lat
         ur_lat = grid_maker.df.ix[(col,row+1)].lat
@@ -117,7 +124,7 @@ class grid_and_area_unit_tests(unittest.TestCase):
         grid_maker.addAreas()
 
 
-        col,row = (700,400)  
+        row,col = (700,400)  
         
         lr_long = grid_maker.df.ix[(col,row)].x
         ur_long = grid_maker.df.ix[(col,row-1)].x
@@ -205,15 +212,15 @@ class snowCode_unit_tests(unittest.TestCase):
         print('on snowCode_unit_tests. setUp function called.')   
         self.home_dir = os.getcwd()
         self.data_dir =  os.path.join(self.home_dir,'data')
-        self.input_zip_dir = os.path.join('zip_files','24km_unit_test/')
-        self.lat_long_area_filename = '/lat_long_centroids_area_24km.csv'
+        self.input_zip_dir = os.path.join('zip_files','24km_unit_test')
+        self.lat_long_area_filename = 'lat_long_centroids_area_24km.csv'
         self.lat_long_coords = {'lower_lat':25,'upper_lat':45,'lower_long':65,'upper_long':105} #set as lower and upper bounds for lat and long
 
     def test_init(self):
         #check if the right area dataframe was added
         makeHDF = makeSnowHDFStore(self.data_dir,self.lat_long_area_filename,self.lat_long_coords)
         self.assertEqual(makeHDF.df.index.size, 20607, 'there should be 20607 points in the tibet dataframe')        
-        self.assertEqual( round(makeHDF.df['area'].sum(),10), 8062815.0956963645, 'total area should be 8062815.0956963645')
+        self.assertEqual( round(makeHDF.df['area'].sum(),4), 8062815.0957, 'total area should be 8062815.0956963645')
         
     def test_build_terrain(self):
 
@@ -240,13 +247,14 @@ class snowCode_unit_tests(unittest.TestCase):
         
 
         #An output directory shall exist
-        output_dir = os.path.join(os.getcwd(),'output',self.input_zip_dir)
+        output_dir = os.path.join(os.getcwd(),'output',os.path.basename(self.input_zip_dir))
         self.assertTrue(os.path.exists(output_dir))
         #There shall be two .h5 files in this directory
-        files = glob.glob(output_dir+'*.h5')
+        files = glob.glob(os.path.join(output_dir,'*.h5'))
+        #pdb.set_trace()
         self.assertEqual(len(files),2)
-        self.assertEqual(files[0],output_dir+'2000.h5')
-        self.assertEqual(files[1],output_dir+'1997.h5')
+        self.assertEqual(os.path.basename(files[0]),'2000.h5')
+        self.assertEqual(os.path.basename(files[1]),'1997.h5')
         #year 1997 .h5 store shall contain three series
         year_store_1997 = pd.HDFStore(files[1])
         self.assertEqual(len(year_store_1997),3)
