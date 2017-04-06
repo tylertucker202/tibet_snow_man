@@ -90,6 +90,7 @@ class grid_and_area:
     def makeCentroids(self):
         
         #find centroids for points that fall within lat_long_coords
+        #pdb.set_trace()
         index_array = np.mgrid[self.col_min-1:self.col_max+2,self.row_min-1:self.row_max+2].swapaxes(0,2).swapaxes(0,1)
         centroids_index = [item for sublist in index_array for item in sublist.tolist()]
   
@@ -209,6 +210,8 @@ class grid_and_area:
                 line = line.replace('4','2')
                 int_body[i] = [int(c) for c in line]
                 
+
+                
         def rbg_convert(x):
             snow = (5,5,5)            
             terra = (0,128,0)
@@ -247,21 +250,6 @@ class grid_and_area:
         self.df['noSnowMap'] = list(map(lambda x: no_snow_matrix[x], self.lat_long_indicies))
         self.df['noSnowMapRBG'] = list(map(lambda x: self.rbg_no_snow_matrix[x], self.lat_long_indicies))
 
-def get_24x24_param():
-    no_snow_planet_name = 'dry_planet_24km.asc'
-    lat_grid_filename = 'imslat_24km.bin'
-    lon_grid_filename = 'imslon_24km.bin'
-    lat_long_area_filename = 'lat_long_centroids_area_24km.csv' 
-    grid_size = 1024
-    return (grid_size, no_snow_planet_name, lat_grid_filename, lon_grid_filename, lat_long_area_filename)    
-    
-def get_4x4_param():
-    no_snow_planet_name = 'dry_planet_4km.asc'
-    lat_grid_filename = 'imslat_4km.bin'
-    lon_grid_filename = 'imslon_4km.bin'
-    lat_long_area_filename = 'lat_long_centroids_area_4km.csv'    
-    grid_size = 6144
-    return (grid_size, no_snow_planet_name, lat_grid_filename, lon_grid_filename, lat_long_area_filename)    
 
 if __name__ == '__main__':
     logging.basicConfig(filename='grid_and_area.log',level=logging.WARNING)
