@@ -6,19 +6,19 @@ import pdb
 import datetime
 from snowCode import makeSnowHDFStore 
 from generate_grid_and_area import grid_and_area
-from region_parameters import get_alps_24x24_param, plot_basemap, plot_points_on_basemap
+from region_parameters import get_artic_24x24_param, plot_basemap, plot_points_on_basemap
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 
 
 if __name__ == '__main__':
-    logging.basicConfig(filename='alps_24.log',level=logging.DEBUG)
+    logging.basicConfig(filename='artic_24.log',level=logging.DEBUG)
     logging.debug('Start of log file')     
     home_dir = os.getcwd()
 
     data_dir = os.path.abspath(os.path.join(os.getcwd() , os.pardir, 'data'))
 
-    filename, grid_size, no_snow_planet_name, lat_grid_filename, lon_grid_filename, lat_long_area_filename, lat_long_coords = get_alps_24x24_param()
+    filename, grid_size, no_snow_planet_name, lat_grid_filename, lon_grid_filename, lat_long_area_filename, lat_long_coords = get_artic_24x24_param()
 
     
     #initialize object
@@ -33,5 +33,4 @@ if __name__ == '__main__':
     grid_maker.addAreas()
     grid_maker.df.to_csv(lat_long_area_filename)
     #plot_basemap(filename, lat_long_coords, show = False, save = True)
-    plot_points_on_basemap(filename,grid_maker.df, lat_long_coords, show = False, save = True)
-
+    plot_points_on_basemap(filename,grid_maker.df, lat_long_coords, show = False, save = True,width = 8500000,height = 10000000)

@@ -6,7 +6,7 @@ import pdb
 import datetime
 from snowCode import makeSnowHDFStore 
 from generate_grid_and_area import grid_and_area
-from region_parameters import get_alberta_24x24_param, plot_basemap
+from region_parameters import get_alberta_24x24_param, plot_points_on_basemap
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 
@@ -32,4 +32,4 @@ if __name__ == '__main__':
 
     grid_maker.addAreas()
     grid_maker.df.to_csv(lat_long_area_filename)
-    plot_basemap(filename, lat_long_coords, show = False, save = True)
+    plot_points_on_basemap(filename,grid_maker.df, lat_long_coords, show = False, save = True)
