@@ -24,6 +24,8 @@ rcStyle = {"font.size":22,
            'ytick.labelsize':12}
 
 sns.set_context("paper", rc=rcStyle) 
+from scipy import stats
+from scipy import signal
 
 import os
 import numpy as np
@@ -112,43 +114,81 @@ df_out = merge_df(df_24, df_bin, period)
 get_z_values = lambda x: (x['24km_cov']-x['mean'])/x['std']
 df_out['z'] = (df_out['24km_cov']-df_out['mean'])/df_out['std']
 df_out['perc_diff'] = 100*(df_out['24km_cov']-df_out['mean'])/df_out['mean']
-
-#time series analysis
-
-fig = plt.figure(0)
-axes = plt.axes()
-df_out['perc_diff'].plot(linewidth = 2)
-axes.set_title('Timeseries of two resolutions')
-axes.set_ylabel(r'Snow anomolies, \%')
-axes.set_xlabel(r'date')
-axes.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.e'))
-
-
 df_out['timestamp'] = df_out.index
 df_out['timestamp'] = pd.to_datetime(df_out['timestamp'], format='%Y-%m-%d').astype(int).astype(float).values
-y=df_out['perc_diff']
-#y=df_out['z'].values
+
+
+
+#time series analysis
+#time series trendline
+y=df_out['perc_diff'] #build a trendline from non-parametric model.
+#y=df_out['z'].values #build a trendline from standardized model
 
 x=df_out['timestamp']
-
 ts_line = pd.ols(y=y, x=x, intercept = True)
 print(ts_line.summary)
 trend = ts_line.predict(beta=ts_line.beta, x=x) 
 data = pd.DataFrame(index=df_out.index, data={'y': y, 'trend': trend})
-data['trend'].plot(linewidth = 2)
-#axes.set_xlim([df_new.index.min(),df_new.index.max()])
 
-from scipy import stats
-import numpy as np
+
 slope, intercept, r_value, p_value, std_err = stats.linregress(x,y)
 
 print('Linear Regression Results \n slope: {0} \n intercept: {1} \n r-value: {2} \n p-value: {3} \n std_err: {4}'.format(slope, intercept, r_value, p_value, std_err))
 
+
+
+
+fig0 = plt.figure(0)
+axes0 = plt.axes()
+axes0.plot(x.index.values, y.values, linewidth = 2)
+axes0.plot(x.index.values, data['trend'].values, linewidth = 2)
+axes0.set_title('Timeseries of 5-day averaged anomalies')
+axes0.set_ylabel(r'Snow anomolies, \%')
+axes0.set_xlabel(r'Date')
+#axes0.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.e'))
+axes0.set_xlim([x.index.min(),x.index.max()])
+
+plt.savefig('tibet_24_averaged.png')
+
+
+
 #save csv's and plots
 df_bin.to_csv('annual_expected_coverage.csv')
 df_out.to_csv('tibet_24_averaged.csv')
-plt.savefig('tibet_24_averaged.png')
 
+fig1 = plt.figure(1)
+axes1 = plt.axes()
+axes1.plot(df_bin['first_day'].values,df_bin['mean'].values, linewidth = 2)
+#df_bin['mean'].plot(ax = axes1, linewidth = 2)
+axes1.set_title('Timeseries of 5 day averages')
+axes1.set_ylabel(r'Mean snow coverage, $km^2$')
+axes1.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.e'))
+axes1.set_xlabel(r'Day of year')
+axes1.set_xlim([df_bin['first_day'].min(),df_bin['first_day'].max()])
+plt.savefig('tibet_24_anomolies_ts.png')
+
+fig2 = plt.figure(2)
+axes2 = plt.axes()
+axes2.hist(y)
+#df_bin['mean'].plot(ax = axes1, linewidth = 2)
+axes2.set_title('Histogram of anomalies')
+axes2.set_ylabel(r'Counts')
+axes2.set_xlabel(r'Snow anomolies, \%')
+plt.savefig('tibet_24_anomolies_hist.png')
+
+#power spectrum plot
+fs = 1 #day
+f, Pxx_den = signal.periodogram(y, fs)
+
+fig3 = plt.figure(3)
+axes3 = plt.axes()
+
+#t = 1/f
+axes3.semilogy(f, Pxx_den)
+axes3.set_ylim([1e-3, 10e7])
+axes3.set_xlabel('frequency [1/day]')
+axes3.set_ylabel('PSD [V**2/Hz]')
+plt.savefig('tibet_24_anomolies_spectral_power_denstiy.png')
 
 
 
