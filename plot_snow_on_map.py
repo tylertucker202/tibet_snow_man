@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.interpolate import griddata
 from matplotlib.colors import LinearSegmentedColormap
-import datetime
+
 
 import pdb
 
@@ -23,7 +23,7 @@ class plotSnow:
         self.df_lat_long = pd.read_csv(os.path.join(data_dir,lat_long_area_filename))
         self.set_up_grid()
 
-    def makeMap(self,proj='merc'):
+    def make_map(self,proj='merc'):
         plt.cla()
         coords = self.lat_long_coords
 
@@ -77,7 +77,7 @@ class plotSnow:
         snow = '#FEFEFE'            
         lat = self.df_lat_long['lat'].values
         lon = self.df_lat_long['long'].values
-        m=self.makeMap(proj='merc')
+        m=self.make_map(proj='merc')
         x,y = m(lon,lat)
         self.grid_x, self.grid_y = np.mgrid[min(x):max(x):3000j, min(y):max(y):3000j]
         #self.grid_x, self.grid_y = np.mgrid[min(x):max(x):len(x)/6, min(y):max(y):len(y)/6]
@@ -86,13 +86,13 @@ class plotSnow:
 
     def make_plots_from_HDFStore(self, output_dir, show = True, save = False):
         plt.ioff()
-        file_names = sorted(glob.glob(output_dir+"*.h5"), key = lambda x: x.rsplit('.', 1)[0])
+        file_names = sorted(glob.glob(os.path.join(output_dir,"*.h5")), key = lambda x: x.rsplit('.', 1)[0])
         for f in file_names:
             with pd.HDFStore(f) as year_store:
                 for series_name in year_store.keys():
                     
                     timestamp = series_name.strip('/series_')
-                    m=self.makeMap('merc')
+                    m=self.make_map('merc')
                     data = year_store[series_name].apply(self.snow_and_ice)
                     grid_z0 = griddata(self.points, data.values, (self.grid_x, self.grid_y), method='linear') #can be nearest, linear, or cubic interpolation
                     grid_z0[ grid_z0 != 1 ] = np.nan

@@ -162,17 +162,15 @@ class grid_and_area:
         m = Basemap(projection='laea',
                     width = 4500000,
                     height = 4000000,
-                    resolution='c',lat_0=center[1],lon_0=center[0])        
-        #convert midpoints to meters
-
-
-        #self.getCentroids('centroids.csv') #its so much faster, this may no longer be needed
- 
+                    resolution='c',lat_0=center[1],lon_0=center[0])    
+                    
+        #self.reduceLatLong() 
+        
         self.makeCentroids()
         #self.centroids = self.centroids[np.isfinite(self.centroids['centroid_long']) & np.isfinite(self.centroids['centroid_lat']) ]
         
         x,y = m(self.centroids['centroid_long'].values, self.centroids['centroid_lat'].values) #given in meters
-     
+        
         self.centroids['x'] = x
         self.centroids['y'] = y
         self.makeAreas()
