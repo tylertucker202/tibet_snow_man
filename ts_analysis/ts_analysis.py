@@ -186,6 +186,7 @@ axes3 = plt.axes()
 #t = 1/f
 axes3.semilogy(f, Pxx_den)
 axes3.set_ylim([1e-3, 10e7])
+axes3.set_title('Power spectrum of anomalies')
 axes3.set_xlabel('frequency [1/day]')
 axes3.set_ylabel('PSD [V**2/Hz]')
 plt.savefig('tibet_24_anomolies_spectral_power_denstiy.png')
