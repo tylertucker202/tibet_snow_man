@@ -14,6 +14,7 @@ import gzip
 reload(logging) #need to reload in spyder
 from snowCode import makeSnowHDFStore 
 from plot_snow_on_map import plotSnow
+import region_parameters
 import matplotlib.pyplot as plt
 import pandas as pd
 from scipy.interpolate import griddata
@@ -30,22 +31,24 @@ class plotSnowCSV(plotSnow):
         plotSnow.__init__(self,data_dir,lat_long_area_filename, lat_long_coords)
     
     
-    def make_plot_from_CSV(self, resolution,series_name, show = True, save = False):
+    def make_plot_from_CSV(self, filename, resolution,series_name, image_path, show = True, save = False):
         plt.ioff()
         
         my_series = pd.Series.from_csv(series_name)
+        #pdb.set_trace()
         
-        timestamp = series_name.strip('/series_').replace('_','-')
+        title_name = filename+'-'+series_name.split('series_')[1].replace('_','-')
         m=self.make_map('merc')
         data = my_series.apply(self.snow_and_ice)
         grid_z0 = griddata(self.points, data.values, (self.grid_x, self.grid_y), method='linear') #can be nearest, linear, or cubic interpolation
         grid_z0[ grid_z0 != 1 ] = np.nan
         m.contourf(self.grid_x, self.grid_y,grid_z0, latlon=False, cmap = self.cmap1, alpha=1)
-        plt.title(timestamp,fontsize=16, color = "black")
+        plt.title(title_name,fontsize=16, color = "black")
+
         if show:
             plt.show()
         if save:
-            plt.savefig(resolution+'_'+timestamp+'.png')
+            plt.savefig(os.path.join(image_path, resolution+'.png'))
             plt.close()   
 
 class makeSnowCSV(makeSnowHDFStore):
@@ -53,7 +56,8 @@ class makeSnowCSV(makeSnowHDFStore):
     create a single time series object and save it as a csv.
     """
 
-    def __init__(self,data_dir, lat_long_area_filename,lat_long_coords):
+    def __init__(self,data_dir, resolution, lat_long_area_filename,lat_long_coords):
+        self.resolution = resolution
         makeSnowHDFStore.__init__(self,data_dir,lat_long_area_filename,lat_long_coords)
 
     def createTimeSeriesCSV(self,filename):
@@ -64,7 +68,7 @@ class makeSnowCSV(makeSnowHDFStore):
         colName = filename.split('_', 1)[0].replace('ims', '')
         colName = colName[0:4]+'_'+colName[4:]
         dt = datetime.datetime.strptime(colName,'%Y_%j')
-        series_name = dt.strftime('series_%Y_%m_%d')
+        series_name = self.resolution+'_'+dt.strftime('series_%Y_%m_%d')
 
         with gzip.open(filename, 'r') as f:
             content = f.read()
@@ -93,7 +97,9 @@ class makeSnowCSV(makeSnowHDFStore):
                     logging.warning('cant distinguish data for alternatively formatted filename: {}. Not added'.format(filename))
                     pass
 
-            if not 4 in body:
+            if not 4 in data:
+                pdb.set_trace()
+                snow_in_body = 4 in np.array(body).flatten()
                 logging.warning('no snow reported for filename: {}'.format(filename))
         return series_name
                         
@@ -107,7 +113,7 @@ def get_daily_folder(resolution_folder):
     year_folder = today.strftime('%Y')
     
     prefix = 'ims'
-    postfix = '_24km_v1.3.asc.gz'
+    postfix = '_'+resolution_folder+'_v1.3.asc.gz'
     day_filename = today.strftime(prefix+'%Y%j'+postfix)
     
     ftp = FTP(url.netloc)    # connect to host, default port
@@ -121,6 +127,7 @@ def get_daily_folder(resolution_folder):
         with open(day_filename, 'w') as fobj:
             ftp.retrbinary("RETR " + day_filename ,fobj.write)
     except:
+        pdb.set_trace()
         print "Error"
     
     ftp.quit()
@@ -131,27 +138,34 @@ if __name__ == '__main__':
     logging.basicConfig(filename='get_daily.log',level=logging.INFO)
     logging.info('Time of log file: {0}'.format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
     
-    twenty_four_dir = '24km'
-    four_dir = '4km'
     home_dir = os.getcwd()
-    data_dir = os.path.abspath(os.path.join(os.getcwd() , os.pardir, 'data'))
+    data_dir = os.path.join(os.getcwd() , os.pardir, os.pardir, 'tibet_snow_man', 'data')
+    content_path = os.path.join(os.getcwd(), os.pardir, 'content','images')
     input_zip_dir = home_dir
-    lat_long_area_filename = 'lat_long_centroids_area_24km.csv'
-    lat_long_coords = {'lower_lat':25,'upper_lat':45,'lower_long':65,'upper_long':105} #set as lower and upper bounds for lat and long
-
-    logging.info('Retrieving today\'s data')
     
-    twenty_four_day_filename = get_daily_folder(twenty_four_dir)
+    output_lists = [region_parameters.get_tibet_24x24_param(),
+                    region_parameters.get_tibet_4x4_param()]
     
-
-    logging.info('Creating today\'s csv')
-    makeCSV = makeSnowCSV(data_dir,lat_long_area_filename,lat_long_coords)  
-    series_name = makeCSV.createTimeSeriesCSV(twenty_four_day_filename)
+    for output_dict in output_lists:
+        lat_long_area_filename = output_dict['lat_long_area_filename']
+        grid_size = output_dict['grid_size']
+        lat_long_coords = output_dict['lat_long_coords']
+        filename = output_dict['filename']
+        ftp_filename = output_dict['ftp_filename']
     
-    logging.info('Start of plotting section')
-    plotHDF = plotSnowCSV(data_dir,lat_long_area_filename,lat_long_coords)
-    plotHDF.make_plot_from_CSV(twenty_four_dir, series_name, show = False, save = True)
+        logging.info('Retrieving today\'s data')
+        
+        today_filename = get_daily_folder(ftp_filename)
+        
     
-    #cleanup, comment out if there is trouble with the images
-    os.remove(series_name)
-    os.remove(twenty_four_day_filename)
+        logging.info('Creating today\'s csv')
+        makeCSV = makeSnowCSV(data_dir, ftp_filename, lat_long_area_filename,lat_long_coords)  
+        series_name = makeCSV.createTimeSeriesCSV(today_filename)
+        
+        logging.info('Start of plotting section')
+        plotHDF = plotSnowCSV(data_dir,lat_long_area_filename,lat_long_coords)
+        plotHDF.make_plot_from_CSV(filename, ftp_filename, series_name, content_path, show = False, save = True)
+        
+        #cleanup, comment out if there is trouble with the images
+        #os.remove(series_name)
+        #os.remove(today_filename)
