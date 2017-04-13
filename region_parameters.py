@@ -9,15 +9,17 @@ import matplotlib.pyplot as plt
 import os
 
 def get_tibet_24x24_param():
-    no_snow_planet_name = 'dry_planet_24km.asc'
-    lat_grid_filename = 'imslat_24km.bin'
-    lon_grid_filename = 'imslon_24km.bin'
-    lat_long_area_filename = 'lat_long_centroids_area_24km.csv' 
-    grid_size = 1024
-    lat_long_coords = {'lower_lat':35,'upper_lat':42,'lower_long':-121,'upper_long':-117} #set as lower and upper bounds for lat and long
-    filename = 'sierras_24km'
-    return (filename, grid_size, no_snow_planet_name, lat_grid_filename, lon_grid_filename, lat_long_area_filename,lat_long_coords)    
-
+    output_dict = {}
+    output_dict['ftp_filename'] = '24km'
+    output_dict['no_snow_planet_name'] = 'dry_planet_24km.asc'
+    output_dict['lat_grid_filename'] = 'imslat_24km.bin'
+    output_dict['lon_grid_filename'] = 'imslon_24km.bin'
+    output_dict['lat_long_area_filename'] = 'lat_long_centroids_area_24km.csv' 
+    output_dict['grid_size'] = 1024
+    output_dict['lat_long_coords'] = {'lower_lat':25,'upper_lat':45,'lower_long':65,'upper_long':105} #set as lower and upper bounds for lat and long
+    output_dict['filename'] = 'Tibet-24km'
+    return output_dict
+    
 def get_sierras_24x24_param():
     no_snow_planet_name = 'dry_planet_24km.asc'
     lat_grid_filename = 'imslat_24km.bin'
@@ -45,7 +47,7 @@ def get_alberta_24x24_param():
     lat_long_area_filename = 'alberta_lat_long_centroids_area_24km.csv' 
     grid_size = 1024
     lat_long_coords = {'lower_lat':47,'upper_lat':60,'lower_long':-120,'upper_long':-110} #set as lower and upper bounds for lat and long
-    filename = 'sierras_24km'
+    filename = 'Alberta-24km'
     return (filename, grid_size, no_snow_planet_name, lat_grid_filename, lon_grid_filename, lat_long_area_filename,lat_long_coords)    
 
 
@@ -56,17 +58,21 @@ def get_sierras_4x4_param():
     lat_long_area_filename = 'sierras_lat_long_centroids_area_4km.csv' 
     grid_size = 6144
     lat_long_coords = {'lower_lat':35,'upper_lat':42,'lower_long':-121,'upper_long':-117} #set as lower and upper bounds for lat and long
-    filename = 'sierras_4km'
+    filename = 'Sierras-4km'
     return (filename, grid_size, no_snow_planet_name, lat_grid_filename, lon_grid_filename, lat_long_area_filename,lat_long_coords)    
     
 def get_tibet_4x4_param():
-    no_snow_planet_name = 'dry_planet_4km.asc'
-    lat_grid_filename = 'imslat_4km.bin'
-    lon_grid_filename = 'imslon_4km.bin'
-    lat_long_area_filename = 'lat_long_centroids_area_4km.csv'    
-    grid_size = 6144
-    return (grid_size, no_snow_planet_name, lat_grid_filename, lon_grid_filename, lat_long_area_filename)    
-
+    output_dict = {}
+    output_dict['ftp_filename'] = '4km'
+    output_dict['no_snow_planet_name'] = 'dry_planet_4km.asc'
+    output_dict['lat_grid_filename'] = 'imslat_4km.bin'
+    output_dict['lon_grid_filename'] = 'imslon_4km.bin'
+    output_dict['lat_long_area_filename'] = 'lat_long_centroids_area_4km.csv' 
+    output_dict['grid_size'] = 6144
+    output_dict['lat_long_coords'] = {'lower_lat':25,'upper_lat':45,'lower_long':65,'upper_long':105} #set as lower and upper bounds for lat and long
+    output_dict['filename'] = 'Tibet-4km'    
+    return output_dict
+    
 def plot_basemap(filename, lat_long_coords, show = True, save = True):
     
     #make map
