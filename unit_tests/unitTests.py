@@ -23,7 +23,7 @@ class grid_and_area_unit_tests(unittest.TestCase):
     def setUp(self):
         print('unit tests. setUp function called.')   
         self.home_dir = os.path.join(os.getcwd(),os.pardir)
-        self.data_dir = os.path.join(self.home_dir,'data')
+        self.data_dir = os.path.join(self.home_dir,os.pardir,'data')
         self.no_snow_planet_name =  'dry_planet_24km.asc'
         self.lat_grid_filename = 'imslat_24km.bin'
         self.lon_grid_filename = 'imslon_24km.bin'
@@ -211,8 +211,8 @@ class snowCode_unit_tests(unittest.TestCase):
     def setUp(self):
         print('on snowCode_unit_tests. setUp function called.')   
         self.home_dir = os.path.join(os.getcwd(),os.pardir)
-        self.data_dir =  os.path.join(self.home_dir,'data')
-        self.input_zip_dir = os.path.join('zip_files','24km_unit_test')
+        self.data_dir = os.path.join(self.home_dir,os.pardir,'data')
+        self.input_zip_dir = os.path.join(self.home_dir,os.pardir,'zip_files','24km_unit_test')
         self.lat_long_area_filename = 'lat_long_centroids_area_24km.csv'
         self.lat_long_coords = {'lower_lat':25,'upper_lat':45,'lower_long':65,'upper_long':105} #set as lower and upper bounds for lat and long
 
@@ -328,8 +328,8 @@ class plotSnow(unittest.TestCase):
     def setUp(self):
         print('on plotSnow_unit_tests. setUp function called.')   
         self.home_dir = os.path.join(os.getcwd(),os.pardir)
-        self.data_dir =  os.path.join(self.home_dir,'data')
-        self.input_zip_dir = os.path.join('zip_files','24km_unit_test')
+        self.data_dir = os.path.join(self.home_dir,os.pardir,'data')
+        self.input_zip_dir = os.path.join(self.home_dir,os.pardir,'zip_files','24km_unit_test')
         self.lat_long_area_filename = 'lat_long_centroids_area_24km.csv'
         self.lat_long_coords = {'lower_lat':25,'upper_lat':45,'lower_long':65,'upper_long':105} #set as lower and upper bounds for lat and long
         self.output_dir = os.path.join(os.getcwd(),'output',os.path.basename(self.input_zip_dir))

@@ -82,7 +82,7 @@ class makeSnowHDFStore:
                 print('in dir:{0} '.format(folder_name))
                 print(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
-                year_store = pd.HDFStore(os.path.join(output_dir,folder_name+'.h5'))
+                year_store = pd.HDFStore(os.path.join(output_dir,folder_name+'.h5'), complevel=9, complib='blosc')
                 input_dir = os.path.join(zip_dir,folder_name)
                 self.createTimeSeriesHDF5(input_dir,year_store)
                 #df_year.to_csv(output_dir+folder_name+'.csv')

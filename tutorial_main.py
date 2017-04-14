@@ -37,5 +37,5 @@ if __name__ == '__main__':
     
     #PLOTTING SECTION
     logging.info('Start of plotting section')
-    plotHDF = plotSnow(lat_long_area_filename,lat_long_coords)
+    plotHDF = plotSnow(data_dir, lat_long_area_filename,lat_long_coords)
     plotHDF.make_plots_from_HDFStore('output/'+input_zip_dir, show = False, save = True)

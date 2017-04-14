@@ -11,7 +11,8 @@ import logging
 from math import sin, cos, asin, sqrt, pi, radians
 reload(logging)
 import numpy as np
-from generate_grid_and_area import grid_and_area, get_24x24_param, get_4x4_param
+from region_parameters import get_tibet_24x24_param
+from generate_grid_and_area import grid_and_area
 import matplotlib.pyplot as plt
 
 
@@ -148,10 +149,12 @@ if __name__ == '__main__':
     
     #data_dir = os.path.join(os.path.join(home_dir,os.sep,os.pardir), 'data')
     data_dir = os.path.abspath(os.path.join(os.getcwd() , os.pardir, 'data'))
-    grid_size, no_snow_planet_name, lat_grid_filename, lon_grid_filename, lat_long_area_filename = get_24x24_param()
+    
+    filename, grid_size, no_snow_planet_name, lat_grid_filename, lon_grid_filename, lat_long_area_filename,lat_long_coords = get_tibet_24x24_param()
+    #grid_size, no_snow_planet_name, lat_grid_filename, lon_grid_filename, lat_long_area_filename = get_tibet_24x24_param()
     #grid_size, no_snow_planet_name, lat_grid_filename, lon_grid_filename, lat_long_area_filename = get_4x4_param()
 
-    lat_long_coords = {'lower_lat':25,'upper_lat':45,'lower_long':65,'upper_long':105} #set as lower and upper bounds for lat and long
+    #lat_long_coords = {'lower_lat':25,'upper_lat':45,'lower_long':65,'upper_long':105} #set as lower and upper bounds for lat and long
     
     #initialize object
     ge = grid_error(lat_long_coords,data_dir,no_snow_planet_name,grid_size)
