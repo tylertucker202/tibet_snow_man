@@ -134,7 +134,7 @@ class makeSnowHDFStore:
 
     def make_coverage_df(self):
         
-        #pdb.set_trace()
+        pdb.set_trace()
         
         data_perc_cov = []
         data_cov = []
@@ -152,9 +152,10 @@ class makeSnowHDFStore:
         for f in file_names:
             print('inside file {}'.format(f))
             try:
-                with pd.io.pytables.HDFStore(f) as year_store:
+                with pd.HDFStore(f) as year_store:
                     for series_name in year_store.keys():
-                        s_snow_ice = np.array(map(lambda x: snow_and_ice(x), year_store[series_name].values))
+                        data = year_store[series_name]
+                        s_snow_ice = np.array(map(lambda x: snow_and_ice(x), day_series.values))
                         if np.sum(s_snow_ice) == 0:
                             logging.warning('check {0}. it contains no snow and ice:'.format(series_name) ) 
                             #pdb.set_trace()
