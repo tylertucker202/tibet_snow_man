@@ -21,9 +21,11 @@ import datetime
 
 
 class makeSnowHDFStore:
-    def __init__(self,data_dir,lat_long_filename,lat_long_coords):
+    def __init__(self,data_dir,output_dir,zip_dir,lat_long_filename,lat_long_coords):
         logging.debug('initializing object')
         self.data_dir = data_dir
+        self.output_dir = output_dir
+        self.zip_dir = zip_dir
         self.logic_matrix = np.matrix([ [1, 1, 1, 1, 1 ], #row: x is reporting space
                                  [0, 1, 0, 1, 0 ], #x is reporting water
                                  [0, 0, 1, 0, 1 ], #x is reporting land
@@ -71,31 +73,30 @@ class makeSnowHDFStore:
             noSnowLen = len(self.df['noSnowMap'].values.tolist())
             logging.error('lists have to be the same length: {0}'.format(err))
         
-    def make_hdf5_files(self,zip_dir):
+    def make_hdf5_files(self):
 
-        output_dir = os.path.join(os.getcwd(),'output',os.path.basename(zip_dir))
-        if not os.path.exists(output_dir):
-            os.makedirs(output_dir)
+        if not os.path.exists(self.output_dir):
+            os.makedirs(self.output_dir)
         #os.chdir(zip_dir)
-        for path, dirs, files in os.walk(zip_dir):
+        for path, dirs, files in os.walk(self.zip_dir):
             for folder_name in dirs:
                 print('in dir:{0} '.format(folder_name))
                 print(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
-                year_store = pd.HDFStore(os.path.join(output_dir,folder_name+'.h5'), complevel=9, complib='blosc')
-                input_dir = os.path.join(zip_dir,folder_name)
+                year_store = pd.HDFStore(os.path.join(self.output_dir,folder_name+'.h5'), complevel=9, complib='blosc')
+                input_dir = os.path.join(self.zip_dir,folder_name)
                 self.createTimeSeriesHDF5(input_dir,year_store)
-                #df_year.to_csv(output_dir+folder_name+'.csv')
+                #df_year.to_csv(self.output_dir+folder_name+'.csv')
                 print('done and file saved, moving on from {0} '.format(folder_name))
                 year_store.close
                 print(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         print('all done')
 
-    def make_false_coverage_df(self,output_dir):
+    def make_false_coverage_df(self):
         data_perc_cov = []
         data_cov = []
         index_ts = []      
-        file_names = sorted(glob.glob(output_dir+"*.h5"), key = lambda x: x.rsplit('.', 1)[0])
+        file_names = sorted(glob.glob(self.output_dir+"*.h5"), key = lambda x: x.rsplit('.', 1)[0])
         #only snow and ice are captured (1), else 0
         def snow_and_ice(x):
             if x==4 or x==3:
@@ -131,12 +132,14 @@ class makeSnowHDFStore:
         df['coverage (km^2)'] = data_cov   
         return df        
 
-    def make_coverage_df(self,output_dir):
+    def make_coverage_df(self):
+        
+        #pdb.set_trace()
         
         data_perc_cov = []
         data_cov = []
         index_ts = []      
-        file_names = sorted(glob.glob(output_dir+"*.h5"), key = lambda x: x.rsplit('.', 1)[0])
+        file_names = sorted(glob.glob(os.path.join(self.output_dir,"*.h5")), key = lambda x: x.rsplit('.', 1)[0])        
         #only snow and ice are captured (1), else 0
         def snow_and_ice(x):
             if x==4 or x==3:

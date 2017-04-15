@@ -241,7 +241,7 @@ class grid_and_area:
         plt.figure()
         plt.imshow(self.rbg_no_snow_matrix)
         filename = filename.strip('.asc')
-        figure_name = path+filename+'.png'
+        figure_name = os.path.join(path,filename+'.png')
         plt.savefig(figure_name)
         plt.close()
                 
