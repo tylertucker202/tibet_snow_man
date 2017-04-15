@@ -215,16 +215,24 @@ class snowCode_unit_tests(unittest.TestCase):
         self.input_zip_dir = os.path.join(self.home_dir,os.pardir,'zip_files','24km_unit_test')
         self.lat_long_area_filename = 'lat_long_centroids_area_24km.csv'
         self.lat_long_coords = {'lower_lat':25,'upper_lat':45,'lower_long':65,'upper_long':105} #set as lower and upper bounds for lat and long
-
+        self.output_dir = os.path.join(self.home_dir,self.input_zip_dir)
     def test_init(self):
         #check if the right area dataframe was added
-        makeHDF = makeSnowHDFStore(self.data_dir,self.lat_long_area_filename,self.lat_long_coords)
+        makeHDF = makeSnowHDFStore(self.data_dir,
+                                   self.output_dir,
+                                   self.input_zip_dir,
+                                   self.lat_long_area_filename,
+                                   self.lat_long_coords)
         self.assertEqual(makeHDF.df.index.size, 20607, 'there should be 20607 points in the tibet dataframe')        
         self.assertEqual( round(makeHDF.df['area'].sum(),4), 8062815.0957, 'total area should be 8062815.0956963645')
         
     def test_build_terrain(self):
 
-        makeHDF = makeSnowHDFStore(self.data_dir,self.lat_long_area_filename,self.lat_long_coords)
+        makeHDF = makeSnowHDFStore(self.data_dir,
+                                   self.output_dir,
+                                   self.input_zip_dir,
+                                   self.lat_long_area_filename,
+                                   self.lat_long_coords)
         
         m = [0, 0, 0, 3, 4] #zero represents either space, water or land. 3 and 4 represents ice and snow respectively
         terrain_list = [0, 1, 2, 1, 2] #dumbed down version of the no_snow_map found in self.df['noSnowMap'].values.tolist()
@@ -240,10 +248,12 @@ class snowCode_unit_tests(unittest.TestCase):
     def test_make_hdf5_files(self):
 
         makeHDF = makeSnowHDFStore(self.data_dir,
+                                   self.output_dir,
+                                   self.input_zip_dir,
                                    self.lat_long_area_filename,
                                    self.lat_long_coords)
         print('Start parsing through compressed files')
-        makeHDF.make_hdf5_files(os.path.join(self.home_dir,self.input_zip_dir))
+        makeHDF.make_hdf5_files()
         
 
         #An output directory shall exist
@@ -322,7 +332,7 @@ class snowCode_unit_tests(unittest.TestCase):
         
         #test if time series matches master timeseries
 
-class plotSnow(unittest.TestCase):
+class test_plotSnow(unittest.TestCase):
 
     #unless the project structure changes, this should remain unchanged.
     def setUp(self):
@@ -390,10 +400,12 @@ class plotSnow(unittest.TestCase):
 
         #first make hdf5 database using unitTest directory
         makeHDF = makeSnowHDFStore(self.data_dir,
+                                   self.output_dir,
+                                   self.input_zip_dir,
                                    self.lat_long_area_filename,
                                    self.lat_long_coords)
         print('Start parsing through compressed files')
-        makeHDF.make_hdf5_files(os.path.join(self.home_dir,self.input_zip_dir))
+        makeHDF.make_hdf5_files()
         
         from plot_snow_on_map import plotSnow #needs to reload this here (possible unit test bug?)
         plotHDF = plotSnow(self.data_dir,self.lat_long_area_filename,self.lat_long_coords)
