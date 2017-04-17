@@ -29,7 +29,7 @@ def get_test_tibet_24x24_param():
     output_dict['no_snow_planet_name'] = 'dry_planet_24km.asc'
     output_dict['lat_grid_filename'] = 'imslat_24km.bin'
     output_dict['lon_grid_filename'] = 'imslon_24km.bin'
-    output_dict['lat_long_area_filename'] = 'tibet_lat_long_centroids_area_24km.csv' 
+    output_dict['lat_long_area_filename'] = 'test_tibet_lat_long_centroids_area_24km.csv' 
     output_dict['grid_size'] = 1024
     output_dict['lat_long_coords'] = {'lower_lat':25,'upper_lat':45,'lower_long':65,'upper_long':105} #set as lower and upper bounds for lat and long
     output_dict['filename'] = 'Test-Tibet-24km'

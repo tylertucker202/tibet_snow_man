@@ -255,7 +255,6 @@ class snowCode_unit_tests(unittest.TestCase):
         print('Start parsing through compressed files')
         makeHDF.make_hdf5_files()
         
-
         #An output directory shall exist
         output_dir = os.path.join(os.getcwd(),'output',os.path.basename(self.input_zip_dir))
         self.assertTrue(os.path.exists(output_dir))
@@ -330,7 +329,25 @@ class snowCode_unit_tests(unittest.TestCase):
         self.assertLess(alt_error,error_threashold, 'parse_alternatively_formatted_file function is not matching noSnowMap' )
         self.assertLess(nom_error,error_threashold, 'parse_normally_formatted_file function is not matching noSnowMap' )
         
-        #test if time series matches master timeseries
+    #test if time series matches master timeseries
+    def test_make_timeseries(self):
+        
+        makeHDF = makeSnowHDFStore(self.data_dir,
+                           self.output_dir,
+                           self.input_zip_dir,
+                           self.lat_long_area_filename,
+                           self.lat_long_coords)
+        print('Start parsing through compressed files')
+        makeHDF.make_hdf5_files()
+        df = makeHDF.make_coverage_df()
+        
+        coverage_mean = 1798144
+        
+        self.assertEqual(int(round(df['coverage (km^2)'].mean(),0))  , coverage_mean,'coverage mean should be equal')  
+        
+        
+        
+        
 
 class test_plotSnow(unittest.TestCase):
 

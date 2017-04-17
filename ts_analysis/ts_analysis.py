@@ -32,6 +32,9 @@ import numpy as np
 homeDir = os.getcwd()
 filename_24km = 'tibet_24_km.csv'
 
+colors = ["grey", "black", "light grey", "dark grey", "greyish"]
+sns.set_palette(sns.xkcd_palette(colors))
+
 #load and format file
 df_24 = pd.read_csv(filename_24km, index_col='timestamp')
 df_24.rename(index=str, columns={u'perc coverage': '24_perc', u'coverage (km^2)': '24km_cov'}, inplace = True)
@@ -109,20 +112,31 @@ def merge_df(df, df_bin,period):
 period = 5
 df_bin = get_period_df(df_24, period)
 
+min_day_of_year = df_bin[df_bin['mean'] == df_bin['mean'].min()]['first_day'].values[0] #jan
+max_day_of_year = df_bin[df_bin['mean'] == df_bin['mean'].max()]['first_day'].values[0] #july
+
+print('Climate averaged properties \n max: {0}: \n min: {1} \n'.format(df_bin['mean'].max()/10**6,df_bin['mean'].min()/10**6) )
+
+
 df_out = merge_df(df_24, df_bin, period)
 
 get_z_values = lambda x: (x['24km_cov']-x['mean'])/x['std']
 df_out['z'] = (df_out['24km_cov']-df_out['mean'])/df_out['std']
 df_out['perc_diff'] = 100*(df_out['24km_cov']-df_out['mean'])/df_out['mean']
-df_out['diff'] = (df_out['24km_cov']-df_out['mean'])
+df_out['anom'] = (df_out['24km_cov']-df_out['mean'])
 df_out['timestamp'] = df_out.index
 df_out['timestamp'] = pd.to_datetime(df_out['timestamp'], format='%Y-%m-%d').astype(int).astype(float).values
 
-
+grouped = df_out.groupby(lambda x: x.year)
+import datetime
+yearly_anom_mean = grouped['anom'].mean()
+years = map(lambda x: str(x), yearly_anom_mean.index.values)
+years = map(lambda x: datetime.datetime.strptime(x, '%Y'), years)
+yearly_anom_mean.index = years
 
 #time series analysis
 #time series trendline
-y=df_out['diff']/((10**3)**2) #build a trendline from non-parametric model.
+y=df_out['anom']/(10**6) #build a trendline from non-parametric model.
 #y=df_out['z'].values #build a trendline from standardized model
 
 x=df_out['timestamp']
@@ -134,22 +148,49 @@ data = pd.DataFrame(index=df_out.index, data={'y': y, 'trend': trend})
 
 slope, intercept, r_value, p_value, std_err = stats.linregress(x,y)
 
-print('Linear Regression Results \n slope: {0} \n intercept: {1} \n r-value: {2} \n p-value: {3} \n std_err: {4}'.format(slope, intercept, r_value, p_value, std_err))
+print('Linear Regression Results \n slope: {0} \n intercept: {1} \n r-value: {2} \n p-value: {3} \n std_err: {4} \n'.format(slope, intercept, r_value, p_value, std_err))
 
+print('Anomaly distribution results \n mean: {0}: \n std: {1} \n skew: {2} \n kurtosis: {3} \n'.format(df_out['anom'].mean(),df_out['anom'].std(),df_out['anom'].skew(),df_out['anom'].kurtosis()))
 
+skew_test = stats.skewtest(df_out['anom'].values)
+kurt_test = stats.kurtosistest(df_out['anom'].values)
 
+print(' kurtosis test p-value: {0} \n skew test p-value: {1}'.format(round(kurt_test.pvalue,3), round(skew_test.pvalue,3)))
 
-fig0 = plt.figure(0)
+fig0 = plt.figure(0,figsize=(7.8,5.7))
+#fig0.set_figheight(5)
+#fig0.set_figwidth(7.4)
 axes0 = plt.axes()
-axes0.plot(x.index.values, y.values, linewidth = 2)
+axes0.plot(x.index.values, y.values, linewidth = 2, alpha = .7)
+
 axes0.plot(x.index.values, data['trend'].values, linewidth = 2)
 axes0.set_title('Time Series of Snow Cover Anomalies')
-axes0.set_ylabel(r'Anomalies, $Mm^2$')
+axes0.set_ylabel(r'Anomalies [$10^{6} km^{2}$]')
+axes0.set_ylim([-2,2.5])
 axes0.set_xlabel(r'Date')
-#axes0.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.e'))
 axes0.set_xlim([x.index.min(),x.index.max()])
 
-plt.savefig('tibet_24_averaged.png')
+axes0.bar(yearly_anom_mean.index.values, yearly_anom_mean.values/10**5, color='w',width=365)
+axes0_2 = axes0.twinx()
+axes0_2.set_ylim([-2,2.5])
+axes0_2.set_ylabel('Yearly avg. anomalies [$10^{5} km^{2}$]')
+axes0_2.grid(False)
+
+
+print('largest peak occurs in Feb 2008 \n') #la nina year 2007-2008
+print('2nd largest peak occurs in Dec 2006 \n') #el nino year 2006-2007
+print('3rd largest peak occurs in Feb 2005 \n') #too small to be la nina
+
+print('Lowest snow coverage occurs in Feb 2001 \n') #strong la nina year
+print('2nd Lowest snow coverage occurs in Feb 2009 \n') #too small to be la nina
+
+
+
+
+axes0.legend([r'time series',
+                 r'trendline', 'yr. avg.'],
+                 frameon = True)
+plt.savefig('tibet_24_averaged.png',bbox_inches='tight')
 
 
 
@@ -159,24 +200,23 @@ df_out.to_csv('tibet_24_averaged.csv')
 
 fig1 = plt.figure(1)
 axes1 = plt.axes()
-axes1.plot(df_bin['first_day'].values,df_bin['mean'].values, linewidth = 2)
+axes1.plot(df_bin['first_day'].values,df_bin['mean'].values/(10**6), linewidth = 2)
 #df_bin['mean'].plot(ax = axes1, linewidth = 2)
-axes1.set_title('Timeseries of 5 day averages')
-axes1.set_ylabel(r'Mean snow coverage, $km^2$')
-axes1.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.e'))
+axes1.set_title('Time Series of 5 Day Averages')
+axes1.set_ylabel(r'Mean snow coverage [$10^{6} km^{2}$]')
 axes1.set_xlabel(r'Day of year')
 axes1.set_xlim([df_bin['first_day'].min(),df_bin['first_day'].max()])
-plt.savefig('tibet_24_anomolies_ts.png')
+plt.savefig('tibet_24_anomalies_ts.png',bbox_inches='tight')
 
 fig2 = plt.figure(2)
 axes2 = plt.axes()
 axes2.hist(y,60)
 #df_bin['mean'].plot(ax = axes1, linewidth = 2)
-axes2.set_title('Histogram of anomalies')
+axes2.set_title('Histogram of Anomalies')
 axes2.set_ylabel(r'Counts')
-axes2.set_xlabel(r'Snow anomolies, $Mm^2$')
+axes2.set_xlabel(r'Snow anomolies [$10^{6} km^{2}]$')
 #axes2.xaxis.set_major_formatter(mtick.FormatStrFormatter('%.e'))
-plt.savefig('tibet_24_anomolies_hist.png')
+plt.savefig('tibet_24_anomalies_hist.png',bbox_inches='tight')
 
 #power spectrum plot
 fs = 1 #day
@@ -188,12 +228,12 @@ axes3 = plt.axes()
 #t = 1/f 
 df_24['24km_cov']
 axes3.semilogy(f*365, Pxx_den)
-#axes3.set_ylim([1e-3, 10e7])
-#axes3.set_ylim([10e5, 10e14])
-axes3.set_title('Power spectrum of anomalies')
-axes3.set_xlabel('frequency [1/year]')
-axes3.set_ylabel('Power')
-plt.savefig('tibet_24_anomolies_spectral_power_denstiy.png')
+axes3.set_xlim([0, 20])
+axes3.set_ylim([10e-6, 10e1])
+axes3.set_title('Power Spectrum of Snow Cover Anomalies')
+axes3.set_xlabel('Frequency [1/day]')
+axes3.set_ylabel('Power [$(10^{6} km^{2})^{2}/(1/day)$]')
+plt.savefig('tibet_24_anomalies_spectral_power_denstiy.png',bbox_inches='tight')
 
 
 
