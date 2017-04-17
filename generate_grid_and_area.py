@@ -177,7 +177,7 @@ class grid_and_area:
         
         self.df = pd.concat([self.df, self.centroids], axis=1, join_axes=[self.df.index], join='inner' )       
         
-    def makeNoSnowMap(self):  
+    def makeNoSnowMap(self, save=False):  
         #Make a .png that shows what your map looks like without snow or
         #ice. Used to check if projection looks OK, but is currently not unit 
         #tested.
@@ -236,13 +236,14 @@ class grid_and_area:
         rbg_no_snow_matrix = map(rbg_convert, no_snow_matrix.flat)
 
         self.rbg_no_snow_matrix = np.array(rbg_no_snow_matrix,dtype='uint16').reshape((self.grid_size,self.grid_size,3))
-
+        
         plt.ioff()
         plt.figure()
         plt.imshow(self.rbg_no_snow_matrix)
         filename = filename.strip('.asc')
         figure_name = os.path.join(path,filename+'.png')
-        plt.savefig(figure_name)
+        if save:
+            plt.savefig(figure_name)
         plt.close()
                 
         self.df['noSnowMap'] = list(map(lambda x: no_snow_matrix[x], self.lat_long_indicies))

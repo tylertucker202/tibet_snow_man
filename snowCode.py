@@ -37,18 +37,6 @@ class makeSnowHDFStore:
         lat_long_indicies = self.df.reset_index(inplace=False)[['row','col']]
         self.rows = lat_long_indicies['row'].values
         self.columns = lat_long_indicies['col'].values
-        
-#        #todo: need to flip columns left right. 
-#        try:
-#            pdb.set_trace()
-#            columns = lat_long_indicies['col'].values
-#            columns2 = columns - int(round(1024*1024/2,0))
-#            columns3 = np.flipud(columns2)
-#            columns_flipped = columns3 + int(round(1024*1024/2,0))
-#            self.columns = columns_flipped
-#        except:
-#            pdb.set_trace()
-#            logging.error( 'not able to flip columns accordingly')
                         
     #value error if this function is defined in add_land                    
     def build_terrain(self,x,y):                                    
