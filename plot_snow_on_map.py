@@ -88,7 +88,7 @@ class plotSnow:
         plt.ioff()
         file_names = sorted(glob.glob(os.path.join(output_dir,"*.h5")), key = lambda x: x.rsplit('.', 1)[0])
         for f in file_names:
-            with pd.HDFStore(f) as year_store:
+            with pd.io.pytables.HDFStore(f,  mode='r') as year_store:
                 for series_name in year_store.keys():
                     
                     timestamp = series_name.strip('/series_')
