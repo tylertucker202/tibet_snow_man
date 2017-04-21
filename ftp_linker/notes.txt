@@ -1,0 +1,11 @@
+need to add 
+
+#!/bin/bash
+
+for shell scripts. 
+
+append the following script to crontab -e
+
+0 5 * * * /home/tyler/Desktop/tibet_snowpack/tibet_project/tibet_snow_man/ftp_linker/post_daily_images_for_blog.sh
+
+this will run this script at 5 am everyday

@@ -37,6 +37,8 @@ sns.set_palette(sns.xkcd_palette(colors))
 
 #load and format file
 df_24 = pd.read_csv(filename_24km, index_col='timestamp')
+
+
 df_24.rename(index=str, columns={u'perc coverage': '24_perc', u'coverage (km^2)': '24km_cov'}, inplace = True)
 df_24.index = pd.to_datetime(df_24.index, format='%Y-%m-%d')
 

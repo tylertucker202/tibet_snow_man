@@ -102,7 +102,6 @@ class makeSnowHDFStore:
                         s_snow_ice = np.array(map(lambda x: snow_and_ice(x), year_store[series_name].values))
                         if np.sum(s_snow_ice) == 0:
                             logging.warning('check {0}. it contains no snow and ice:'.format(series_name) ) 
-                            #pdb.set_trace()
                         snow_ice_area = 24*24*s_snow_ice.sum()
                         timestamp = series_name.strip('/series_')
                         index_ts.append(timestamp)
@@ -143,7 +142,6 @@ class makeSnowHDFStore:
                         s_snow_ice = np.array(map(lambda x: snow_and_ice(x), data.values))
                         if np.sum(s_snow_ice) == 0:
                             logging.warning('check {0}. it contains no snow and ice:'.format(series_name) ) 
-                            #pdb.set_trace()
                         snow_ice_area = np.dot(s_snow_ice, self.df['area'].values)
                         timestamp = series_name.strip('/series_')
                         index_ts.append(timestamp)
@@ -168,7 +166,6 @@ class makeSnowHDFStore:
         #output_df = pd.DataFrame() replaced with year_store
 
         if not os.path.exists(directory):
-            pdb.set_trace()
             logging.warning('directory does not exist: {0}'.format(directory))
             
         for path, dirs, files in os.walk(directory):
@@ -228,7 +225,6 @@ class makeSnowHDFStore:
                 start_line = i
                 break
             if i > threashold: #TODO: need to format the body for files with spaces in zeros
-                pdb.set_trace()
                 logging.error('cant distinguish header for filename: {}'.format(filename))
                 break 
         header = lines[0:start_line-1]

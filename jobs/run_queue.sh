@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 #task spooler command tsp adds a process to a queue
 PYTHONPATH="${PYTHONPATH}:/home/gstudent4/Desktop/tibet_project/tibet_snow_man/"

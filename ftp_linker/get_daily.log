@@ -1,92 +1,56 @@
-INFO:root:Time of log file: 2017-04-03 13:56:44
+INFO:root:Time of log file: 2017-04-17 15:22:19
 INFO:root:Retrieving today's data
 INFO:root:Creating today's csv
 INFO:root:data found at index: 30
-WARNING:root:no snow reported for filename: ims2017093_24km_v1.3.asc.gz
 INFO:root:Start of plotting section
-INFO:root:Time of log file: 2017-04-03 14:03:08
 INFO:root:Retrieving today's data
 INFO:root:Creating today's csv
 INFO:root:data found at index: 30
-WARNING:root:cant distinguish data for normally formatted filename: ims2017093_24km_v1.3.asc.gz. Not added
-WARNING:root:no snow reported for filename: ims2017093_24km_v1.3.asc.gz
-INFO:root:Time of log file: 2017-04-03 14:15:15
-INFO:root:Retrieving today's data
-INFO:root:Creating today's csv
-INFO:root:data found at index: 30
-WARNING:root:cant distinguish data for normally formatted filename: ims2017093_24km_v1.3.asc.gz. Not added
-WARNING:root:no snow reported for filename: ims2017093_24km_v1.3.asc.gz
-INFO:root:Time of log file: 2017-04-03 14:28:31
-INFO:root:Retrieving today's data
-INFO:root:Creating today's csv
-INFO:root:data found at index: 30
-WARNING:root:cant distinguish data for normally formatted filename: ims2017093_24km_v1.3.asc.gz. Not added
-WARNING:root:no snow reported for filename: ims2017093_24km_v1.3.asc.gz
-INFO:root:Time of log file: 2017-04-05 10:37:23
-INFO:root:Retrieving today's data
-INFO:root:Creating today's csv
-INFO:root:data found at index: 30
-WARNING:root:cant distinguish data for normally formatted filename: ims2017095_24km_v1.3.asc.gz. Not added
-WARNING:root:no snow reported for filename: ims2017095_24km_v1.3.asc.gz
-INFO:root:Time of log file: 2017-04-05 10:38:09
-INFO:root:Retrieving today's data
-INFO:root:Creating today's csv
-INFO:root:data found at index: 30
-WARNING:root:cant distinguish data for normally formatted filename: ims2017095_24km_v1.3.asc.gz. Not added
-WARNING:root:no snow reported for filename: ims2017095_24km_v1.3.asc.gz
-INFO:root:Time of log file: 2017-04-05 10:38:47
-INFO:root:Retrieving today's data
-INFO:root:Creating today's csv
-INFO:root:data found at index: 30
-WARNING:root:cant distinguish data for normally formatted filename: ims2017095_24km_v1.3.asc.gz. Not added
-WARNING:root:no snow reported for filename: ims2017095_24km_v1.3.asc.gz
 INFO:root:Start of plotting section
-INFO:root:Time of log file: 2017-04-05 10:39:32
+INFO:root:Time of log file: 2017-04-17 15:42:42
 INFO:root:Retrieving today's data
 INFO:root:Creating today's csv
 INFO:root:data found at index: 30
-WARNING:root:cant distinguish data for normally formatted filename: ims2017095_24km_v1.3.asc.gz. Not added
-WARNING:root:no snow reported for filename: ims2017095_24km_v1.3.asc.gz
 INFO:root:Start of plotting section
-INFO:root:Time of log file: 2017-04-05 10:39:49
 INFO:root:Retrieving today's data
 INFO:root:Creating today's csv
 INFO:root:data found at index: 30
-WARNING:root:no snow reported for filename: ims2017095_24km_v1.3.asc.gz
 INFO:root:Start of plotting section
-INFO:root:Time of log file: 2017-04-05 10:40:58
+INFO:root:Time of log file: 2017-04-17 15:50:32
 INFO:root:Retrieving today's data
 INFO:root:Creating today's csv
 INFO:root:data found at index: 30
-WARNING:root:no snow reported for filename: ims2017095_24km_v1.3.asc.gz
 INFO:root:Start of plotting section
-INFO:root:Time of log file: 2017-04-05 10:41:18
 INFO:root:Retrieving today's data
 INFO:root:Creating today's csv
 INFO:root:data found at index: 30
-WARNING:root:no snow reported for filename: ims2017095_24km_v1.3.asc.gz
 INFO:root:Start of plotting section
-INFO:root:Time of log file: 2017-04-12 09:29:11
+INFO:root:Time of log file: 2017-04-17 15:54:17
 INFO:root:Retrieving today's data
 INFO:root:Creating today's csv
 INFO:root:data found at index: 30
-WARNING:root:no snow reported for filename: ims2017102_24km_v1.3.asc.gz
 INFO:root:Start of plotting section
-INFO:root:Time of log file: 2017-04-12 09:31:01
 INFO:root:Retrieving today's data
 INFO:root:Creating today's csv
 INFO:root:data found at index: 30
-WARNING:root:no snow reported for filename: ims2017102_24km_v1.3.asc.gz
 INFO:root:Start of plotting section
-INFO:root:Time of log file: 2017-04-12 09:36:52
+INFO:root:Time of log file: 2017-04-18 18:00:38
 INFO:root:Retrieving today's data
 INFO:root:Creating today's csv
 INFO:root:data found at index: 30
-WARNING:root:no snow reported for filename: ims2017102_24km_v1.3.asc.gz
 INFO:root:Start of plotting section
-INFO:root:Time of log file: 2017-04-12 09:44:33
 INFO:root:Retrieving today's data
 INFO:root:Creating today's csv
 INFO:root:data found at index: 30
-WARNING:root:no snow reported for filename: ims2017102_24km_v1.3.asc.gz
+INFO:root:Start of plotting section
+INFO:root:Time of log file: 2017-04-18 18:12:51
+INFO:root:Retrieving today's data
+INFO:root:Time of log file: 2017-04-20 11:39:18
+INFO:root:Retrieving today's data
+INFO:root:Creating today's csv
+INFO:root:data found at index: 30
+INFO:root:Start of plotting section
+INFO:root:Retrieving today's data
+INFO:root:Creating today's csv
+INFO:root:data found at index: 30
 INFO:root:Start of plotting section
