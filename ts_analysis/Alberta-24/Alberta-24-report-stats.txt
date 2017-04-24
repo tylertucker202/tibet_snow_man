@@ -1,0 +1,20 @@
+
+
+============
+Alberta-24=================
+Climate averaged properties [10^6 km^2] 
+ max: 0.914500714391: 
+ min: 0.00328223277724 
+Linear Regression Results 
+ slope: 2.87289343749e-20 
+ intercept: -0.033767250534 
+ r-value: 0.0471100795468 
+ p-value: 5.91601898897e-05 
+ std_err: 7.14915817561e-21 
+Anomaly distribution results 
+ mean: -23.4889278397: 
+ std: 111831.267186 
+ skew: 0.505254621645 
+ kurtosis: 5.21855527991 
+ kurtosis test p-value: 0.0 
+ skew test p-value: 0.0

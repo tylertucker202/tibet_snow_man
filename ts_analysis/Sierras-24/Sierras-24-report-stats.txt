@@ -1,0 +1,20 @@
+
+
+============
+Sierras-24=================
+Climate averaged properties [10^6 km^2] 
+ max: 0.106243003505: 
+ min: 0.000793925847857 
+Linear Regression Results 
+ slope: -2.38189728273e-20 
+ intercept: 0.0275649157074 
+ r-value: -0.134344654791 
+ p-value: 2.77012885479e-23 
+ std_err: 2.38510643717e-21 
+Anomaly distribution results 
+ mean: -27.1896496486: 
+ std: 33033.2282424 
+ skew: 0.469038278303 
+ kurtosis: 2.0511217329 
+ kurtosis test p-value: 0.0 
+ skew test p-value: 0.0

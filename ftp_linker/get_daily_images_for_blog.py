@@ -4,6 +4,9 @@ Created on Mon Apr  3 11:08:04 2017
 
 @author: tyler
 """
+import matplotlib
+matplotlib.use('Agg') #needed to run via crontab
+
 
 from ftplib import FTP
 import datetime
@@ -15,7 +18,7 @@ reload(logging) #need to reload in spyder
 from snowCode import makeSnowHDFStore 
 from plot_snow_on_map import plotSnow
 import region_parameters
-import matplotlib.pyplot as plt
+import pylab as plt
 import pandas as pd
 from scipy.interpolate import griddata
 import numpy as np
@@ -118,7 +121,8 @@ def get_daily_folder(resolution_folder):
     
     prefix = 'ims'
     postfix = '_'+resolution_folder+'_v1.3.asc.gz'
-    day_filename = today.strftime(prefix+'%Y%j'+postfix)
+    yesterday = today - datetime.timedelta(1)
+    day_filename = yesterday.strftime(prefix+'%Y%j'+postfix)
     
     ftp = FTP(url.netloc)    # connect to host, default port
     ftp.login()                     # user anonymous, passwd anonymous@
@@ -146,7 +150,7 @@ if __name__ == '__main__':
     
     
     data_dir = os.path.join('/home','tyler','Desktop','tibet_snowpack','tibet_project', 'data')
-    content_path = os.path.join('/home','tyler','Desktop','tibet_snowpack','itsonlyamodel', 'content','images')
+    content_path = os.path.join('/home','tyler','Desktop','tibet_snowpack','itsonlyamodel', 'output','images')
     input_zip_dir = home_dir
     
     output_lists = [region_parameters.get_tibet_24x24_param(),

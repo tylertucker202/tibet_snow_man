@@ -11,7 +11,7 @@ import logging
 from math import sin, cos, asin, sqrt, pi, radians
 reload(logging)
 import numpy as np
-from region_parameters import get_tibet_24x24_param
+from region_parameters import get_alps_24x24_param
 from generate_grid_and_area import grid_and_area
 import matplotlib.pyplot as plt
 
@@ -26,68 +26,66 @@ sns.set_palette(sns.xkcd_palette(colors))
 
 class grid_error(grid_and_area):
     
-    def __init__(self,lat_long_coords,data_dir, no_snow_map_name, grid_size):
+    def __init__(self,lat_long_coords,data_dir, no_snow_map_name, grid_size, plot_name):
         grid_and_area.__init__(self,lat_long_coords,data_dir, no_snow_map_name, grid_size)
         self.addLatLong(lat_grid_filename,lon_grid_filename)
         self.reduceLatLong()
         self.makeNoSnowMap()
         self.addAreas()
+        self.plot_name = plot_name
         
     def get_surrounding_centroids(self,row_id):
 
         tl_point = self.df[ self.df['id'] == row_id]
         col, row = tl_point.index.values[0]
         centroid_corners = self.centroids.ix[(col, row)]['area_points']
+        #pdb.set_trace()
         
         phi_1 = self.centroids.ix[centroid_corners['top_left']]['centroid_lat']
         lam_1 = self.centroids.ix[centroid_corners['top_left']]['centroid_long']
+        #lam_1 = lam_1 - self.centroids['centroid_long'].min()
         
         phi_2 = self.centroids.ix[centroid_corners['top_right']]['centroid_lat']
         lam_2 = self.centroids.ix[centroid_corners['top_right']]['centroid_long']
+        #lam_2 = lam_2 - self.centroids['centroid_long'].min()
         
         phi_3 = self.centroids.ix[centroid_corners['bottom_right']]['centroid_lat']
         lam_3 = self.centroids.ix[centroid_corners['bottom_right']]['centroid_long']
-
+        #lam_3 = lam_3 - self.centroids['centroid_long'].min()
+        
         phi_4 = self.centroids.ix[centroid_corners['bottom_left']]['centroid_lat']
         lam_4 = self.centroids.ix[centroid_corners['bottom_left']]['centroid_long']        
+        #lam_4 = lam_4 - self.centroids['centroid_long'].min()
         
         return ((phi_1,lam_1),(phi_2,lam_2),(phi_3,lam_3),(phi_4,lam_4))
         
     def get_spherical_triangle(self,coords):       
         triangle_areas = []
-        for i,coord in enumerate(coords):
-            #print(i)
-            #print((i+1)%4)
+        
+        def get_tri_area(coord):
             start_coord = map(radians,coord)
             end_coord = map(radians,coords[(i+1)%4])
             phi_1, phi_2 = start_coord[0], end_coord[0]
             dist = self.haversine_formula(start_coord,end_coord)
             semi_p = self.semi_perimeter(dist, phi_1, phi_2)
-            area = self.lhuilier(semi_p, dist, phi_1, phi_2)
+            tri_area = self.lhuilier(semi_p, dist, phi_1, phi_2)
 
-            sign = 1 - 2*(i/2)       
             
-            triangle_areas.append(area*sign)
-        #pdb.set_trace()
-        area = sum(triangle_areas)
-        #print('area for {0}: {1}'.format(row_id, area))
-        return area
-    
-    def spherical_polygon(self, coords):
-        angles = []
-        
+            return tri_area
+                
+        #TODO: figure out how to determine sign of triangle
+        #is minimum value always correct?
         for i,coord in enumerate(coords):
-            #print(i)
-            #print((i+1)%4)
-            start_coord = coord
-            end_coord = coords[(i+1)%4]
-            phi_1, phi_2 = start_coord[0], end_coord[0]
-            dist = self.haversine_formula(start_coord,end_coord)   
-            angles.append(dist)
-        
-        area = (sum(angles) - (len(coords) -2) * np.pi) * 6371**2
-        pdb.set_trace()
+ 
+            tri_area= get_tri_area(coord)
+            sign = 1 - 2*(i/2) 
+            triangle_areas.append(tri_area*sign)
+        area = sum(triangle_areas)
+        if abs(area) > 1000:
+            pdb.set_trace()
+
         return area
+
     
     def haversine_formula(self,start_coord,end_coord):
         """
@@ -128,13 +126,15 @@ class grid_error(grid_and_area):
         def get_area(id_num):
             coord = self.get_surrounding_centroids(id_num)
             sp_area = self.get_spherical_triangle(coord)
+            #sp_area = self.spherical_polygon(coord)
             return sp_area
+        
         
         self.df['sp_area'] = map(lambda x: get_area(x), self.df['id'])
         self.df['area_error'] = 100* (self.df['area'] - self.df['sp_area']) / self.df['sp_area']
-    #def compare_cell_area():
+
     
-    def plot_dist(self):
+    def plot_dist(self, save = True):
         fig = plt.figure(0)
         axes = plt.axes()
         axes.hist(self.df['area_error'].values, 50)
@@ -142,43 +142,76 @@ class grid_error(grid_and_area):
         axes.set_ylabel(r'frequency')
         axes.set_xlabel(r'% error')
         plt.show()
+        if save:
+            plt.savefig(self.plot_name)
+    
 
     
 if __name__ == '__main__':
     home_dir = os.getcwd()
     
-    #data_dir = os.path.join(os.path.join(home_dir,os.sep,os.pardir), 'data')
-    data_dir = os.path.abspath(os.path.join(os.getcwd() , os.pardir, 'data'))
-    
-    filename, grid_size, no_snow_planet_name, lat_grid_filename, lon_grid_filename, lat_long_area_filename,lat_long_coords = get_tibet_24x24_param()
-    #grid_size, no_snow_planet_name, lat_grid_filename, lon_grid_filename, lat_long_area_filename = get_tibet_24x24_param()
-    #grid_size, no_snow_planet_name, lat_grid_filename, lon_grid_filename, lat_long_area_filename = get_4x4_param()
-
-    #lat_long_coords = {'lower_lat':25,'upper_lat':45,'lower_long':65,'upper_long':105} #set as lower and upper bounds for lat and long
+    data_dir = os.path.join(os.path.join(os.getcwd(),os.pardir,os.pardir), 'data')
+    #data_dir = os.path.abspath(os.path.join(os.getcwd() , os.pardir, 'data'))
+  
+    input_dict = get_alps_24x24_param()
+    ftp_filename = input_dict['ftp_filename']
+    grid_size = input_dict['grid_size']
+    no_snow_planet_name = input_dict['no_snow_planet_name']
+    lat_grid_filename = input_dict['lat_grid_filename']
+    lon_grid_filename = input_dict['lon_grid_filename']
+    lat_long_area_filename = input_dict['lat_long_area_filename']
+    lat_long_coords = input_dict['lat_long_coords']
+    plot_name = input_dict['filename']
     
     #initialize object
-    ge = grid_error(lat_long_coords,data_dir,no_snow_planet_name,grid_size)
+    ge = grid_error(lat_long_coords,data_dir,no_snow_planet_name,grid_size,plot_name)
     coords_0 = ge.get_surrounding_centroids(0)
     
     #add spherical triangle areas to dataframe
     ge.add_cell_area()
-    
     #plot errors
-    ge.plot_dist()
+    ge.plot_dist(save = True)
+    
+    
+    
+#outlier investigation
+outliers = ge.df[abs(ge.df['area_error']) > 50]
+outlier_coord = ge.get_surrounding_centroids(2019)
+outlier_area = ge.get_spherical_triangle(outlier_coord)
+start_coord,end_coord = [map(radians,outlier_coord[0]), map(radians,outlier_coord[(0+1)%4])]
+l1 = ge.haversine_formula(start_coord,end_coord)
 
-#    error = 100* (ge.df['area'] - ge.df['sp_area']) / ge.df['sp_area'])
-#    
-#
-#    bottom_phi = 25 
-#    top_phi = 45 
-#    left_lambda = 65 
-#    right_lambda = 105 
-#    bottom_phi, top_phi, left_lambda, right_lambda = map(radians, [bottom_phi, top_phi, left_lambda, right_lambda])
-#    test_coords = ((top_phi, left_lambda),(top_phi,right_lambda),(bottom_phi, right_lambda),(bottom_phi,left_lambda))
-#    
-#    #test_area = ge.spherical_polygon(test_coords)
-#    test_area_0 = ge.get_spherical_triangle(coords_0)
-#    test_area2 = ge.get_spherical_triangle(test_coords)
-#    
-#    
+start_coord,end_coord = [map(radians,outlier_coord[1]), map(radians,outlier_coord[(1+1)%4])]
+l2 = ge.haversine_formula(start_coord,end_coord)
+
+start_coord,end_coord = [map(radians,outlier_coord[2]), map(radians,outlier_coord[(2+1)%4])]
+l3 = ge.haversine_formula(start_coord,end_coord)
+
+start_coord,end_coord = [map(radians,outlier_coord[3]), map(radians,outlier_coord[(3+1)%4])]
+l4 = ge.haversine_formula(start_coord,end_coord)
+
+area_outliers = (sum([l1,l2,l3,l4]) - (len([l1,l2,l3,l4]) -2) * np.pi) * 6371**2
+
+ge.haversine_formula(start_coord,end_coord)
+
+#normal investigation
+coord = ge.get_surrounding_centroids(0)
+area = ge.get_spherical_triangle(coord)
+start_coord,end_coord = [map(radians,coord[0]), map(radians,coord[(0+1)%4])]
+l1 = ge.haversine_formula(start_coord,end_coord)
+
+start_coord,end_coord = [map(radians,coord[1]), map(radians,coord[(1+1)%4])]
+l2 = ge.haversine_formula(start_coord,end_coord)
+
+start_coord,end_coord = [map(radians,coord[2]), map(radians,coord[(2+1)%4])]
+l3 = ge.haversine_formula(start_coord,end_coord)
+
+start_coord,end_coord = [map(radians,coord[3]), map(radians,coord[(3+1)%4])]
+l4 = ge.haversine_formula(start_coord,end_coord)
+
+area = (sum([l1,l2,l3,l4]) - (len([l1,l2,l3,l4]) -2) * np.pi) * 6371**2
+    
+    
+    
+
 

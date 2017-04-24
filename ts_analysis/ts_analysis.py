@@ -32,7 +32,9 @@ import numpy as np
 homeDir = os.getcwd()
 filename_24km = 'tibet_24_km.csv'
 
-colors = ["grey", "black", "light grey", "dark grey", "greyish"]
+#colors = ["grey", "black", "light grey", "dark grey", "greyish"]
+colors = ["black", "dark grey", "light grey", "dark grey", "greyish"]
+colors = ["windows blue", "amber", "scarlet", "faded green", "dusty purple"]
 sns.set_palette(sns.xkcd_palette(colors))
 
 #load and format file
@@ -159,24 +161,27 @@ kurt_test = stats.kurtosistest(df_out['anom'].values)
 
 print(' kurtosis test p-value: {0} \n skew test p-value: {1}'.format(round(kurt_test.pvalue,3), round(skew_test.pvalue,3)))
 
-fig0 = plt.figure(0,figsize=(7.8,5.7))
-#fig0.set_figheight(5)
-#fig0.set_figwidth(7.4)
-axes0 = plt.axes()
-axes0.plot(x.index.values, y.values, linewidth = 2, alpha = .7)
+#fig0 = plt.figure(0,figsize=(7.8,5.7))
 
-axes0.plot(x.index.values, data['trend'].values, linewidth = 2)
-axes0.set_title('Time Series of Snow Cover Anomalies')
-axes0.set_ylabel(r'Anomalies [$10^{6} km^{2}$]')
-axes0.set_ylim([-2,2.5])
-axes0.set_xlabel(r'Date')
-axes0.set_xlim([x.index.min(),x.index.max()])
+fig0, axes0 = plt.subplots(2,1,figsize=(7.8,5.7), sharex = True)
 
-axes0.bar(yearly_anom_mean.index.values, yearly_anom_mean.values/10**5, color='w',width=365)
-axes0_2 = axes0.twinx()
-axes0_2.set_ylim([-2,2.5])
-axes0_2.set_ylabel('Yearly avg. anomalies [$10^{5} km^{2}$]')
-axes0_2.grid(False)
+#axes0 = plt.axes()
+axes0[0].plot(x.index.values, y.values, linewidth = 2, alpha = 1)
+
+axes0[0].plot(x.index.values, data['trend'].values, linewidth = 2)
+axes0[0].set_title('Time Series of Snow Cover Anomalies')
+axes0[0].set_ylabel(r'Anom. [$10^{6} km^{2}$]')
+axes0[0].set_ylim([-2,2.5])
+axes0[0].set_xlim([x.index.min(),x.index.max()])
+
+axes0[1].bar(yearly_anom_mean.index.values, yearly_anom_mean.values/10**5, color='w',width=365)
+axes0_L = axes0[1].twinx()
+axes0[1].set_ylim([-2,2.5])
+axes0_L.set_ylabel('Yearly avg. anom. [$10^{5} km^{2}$]')
+axes0_L.yaxis.set_ticks([])
+axes0_L.yaxis.set_label_coords(1.03,.8)
+axes0[1].grid(False)
+axes0[1].set_xlabel(r'Date')
 
 
 print('largest peak occurs in Feb 2008 \n') #la nina year 2007-2008
@@ -189,53 +194,53 @@ print('2nd Lowest snow coverage occurs in Feb 2009 \n') #too small to be la nina
 
 
 
-axes0.legend([r'time series',
-                 r'trendline', 'yr. avg.'],
+axes0[0].legend([r'time series',
+                 r'trendline'],
                  frameon = True)
 plt.savefig('tibet_24_averaged.png',bbox_inches='tight')
 
 
-
-#save csv's and plots
-df_bin.to_csv('annual_expected_coverage.csv')
-df_out.to_csv('tibet_24_averaged.csv')
-
-fig1 = plt.figure(1)
-axes1 = plt.axes()
-axes1.plot(df_bin['first_day'].values,df_bin['mean'].values/(10**6), linewidth = 2)
-#df_bin['mean'].plot(ax = axes1, linewidth = 2)
-axes1.set_title('Time Series of 5 Day Averages')
-axes1.set_ylabel(r'Mean snow coverage [$10^{6} km^{2}$]')
-axes1.set_xlabel(r'Day of year')
-axes1.set_xlim([df_bin['first_day'].min(),df_bin['first_day'].max()])
-plt.savefig('tibet_24_anomalies_ts.png',bbox_inches='tight')
-
-fig2 = plt.figure(2)
-axes2 = plt.axes()
-axes2.hist(y,60)
-#df_bin['mean'].plot(ax = axes1, linewidth = 2)
-axes2.set_title('Histogram of Anomalies')
-axes2.set_ylabel(r'Counts')
-axes2.set_xlabel(r'Snow anomolies [$10^{6} km^{2}]$')
-#axes2.xaxis.set_major_formatter(mtick.FormatStrFormatter('%.e'))
-plt.savefig('tibet_24_anomalies_hist.png',bbox_inches='tight')
-
-#power spectrum plot
-fs = 1 #day
-f, Pxx_den = signal.periodogram(y, fs)
-#f, Pxx_den = signal.periodogram(df_24['24km_cov'].values, fs)
-fig3 = plt.figure(3)
-axes3 = plt.axes()
-
-#t = 1/f 
-df_24['24km_cov']
-axes3.semilogy(f*365, Pxx_den)
-axes3.set_xlim([0, 20])
-axes3.set_ylim([10e-6, 10e1])
-axes3.set_title('Power Spectrum of Snow Cover Anomalies')
-axes3.set_xlabel('Frequency [1/day]')
-axes3.set_ylabel('Power [$(10^{6} km^{2})^{2}/(1/day)$]')
-plt.savefig('tibet_24_anomalies_spectral_power_denstiy.png',bbox_inches='tight')
+#
+##save csv's and plots
+#df_bin.to_csv('annual_expected_coverage.csv')
+#df_out.to_csv('tibet_24_averaged.csv')
+#
+#fig1 = plt.figure(1)
+#axes1 = plt.axes()
+#axes1.plot(df_bin['first_day'].values,df_bin['mean'].values/(10**6), linewidth = 2)
+##df_bin['mean'].plot(ax = axes1, linewidth = 2)
+#axes1.set_title('Time Series of 5 Day Averages')
+#axes1.set_ylabel(r'Mean snow coverage [$10^{6} km^{2}$]')
+#axes1.set_xlabel(r'Day of year')
+#axes1.set_xlim([df_bin['first_day'].min(),df_bin['first_day'].max()])
+#plt.savefig('tibet_24_anomalies_ts.png',bbox_inches='tight')
+#
+#fig2 = plt.figure(2)
+#axes2 = plt.axes()
+#axes2.hist(y,60)
+##df_bin['mean'].plot(ax = axes1, linewidth = 2)
+#axes2.set_title('Histogram of Anomalies')
+#axes2.set_ylabel(r'Counts')
+#axes2.set_xlabel(r'Snow anomolies [$10^{6} km^{2}]$')
+##axes2.xaxis.set_major_formatter(mtick.FormatStrFormatter('%.e'))
+#plt.savefig('tibet_24_anomalies_hist.png',bbox_inches='tight')
+#
+##power spectrum plot
+#fs = 1 #day
+#f, Pxx_den = signal.periodogram(y, fs)
+##f, Pxx_den = signal.periodogram(df_24['24km_cov'].values, fs)
+#fig3 = plt.figure(3)
+#axes3 = plt.axes()
+#
+##t = 1/f 
+#df_24['24km_cov']
+#axes3.semilogy(f*365, Pxx_den)
+#axes3.set_xlim([0, 20])
+#axes3.set_ylim([10e-6, 10e1])
+#axes3.set_title('Power Spectrum of Snow Cover Anomalies')
+#axes3.set_xlabel('Frequency [1/day]')
+#axes3.set_ylabel('Power [$(10^{6} km^{2})^{2}/(1/day)$]')
+#plt.savefig('tibet_24_anomalies_spectral_power_denstiy.png',bbox_inches='tight')
 
 
 

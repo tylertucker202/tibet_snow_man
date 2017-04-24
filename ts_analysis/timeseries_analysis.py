@@ -20,6 +20,8 @@ rcStyle = {"font.size":22,
            'xtick.labelsize':16,
            'ytick.labelsize':16}
 sns.set_context("paper", rc=rcStyle) 
+colors = ["windows blue", "amber", "scarlet", "faded green", "dusty purple"]
+sns.set_palette(sns.xkcd_palette(colors))
 from scipy import stats
 from scipy import signal
 
@@ -54,7 +56,8 @@ class timeseries_report:
         #start saving and plotting
         self.save_data()
         
-        self.make_timeseries_plot()
+        #self.make_timeseries_plot()
+        self.make_timeseries_subplot() #better to use a subplot
         self.make_climate_plot()
         self.make_histogram()
         self.make_spectrum()
@@ -156,39 +159,43 @@ class timeseries_report:
         
     def do_stats(self):
         
-        print('\n\n============\n'+self.series_name+'=================\n')
-        print('Climate averaged properties [10^6 km^2] \n max: {0}: \n min: {1} \n'.format(self.clim['mean'].max()/10**6,self.clim['mean'].min()/10**6) )
-
-        #time series trendline
+        with open(os.path.join(self.series_name,self.series_name+'-report-stats.txt'), 'w') as f:
+            
+            f.write('\n\n============\n'+self.series_name+'=================\n')
+            f.write('Climate averaged properties [10^6 km^2] \n max: {0}: \n min: {1} \n'.format(self.clim['mean'].max()/10**6,self.clim['mean'].min()/10**6) )
     
+            #time series trendline
         
-        self.anomalies=self.df_out['anom']/(10**6) #build a trendline from non-parametric model.
-        #y=df_out['z'].values #build a trendline from standardized model
-        
-        self.timestamps=self.df_out['timestamp']
-        ts_line = pd.ols(y=self.anomalies, x=self.timestamps, intercept = True)
-        trend = ts_line.predict(beta=ts_line.beta, x=self.timestamps) 
-        self.trendline_data = pd.DataFrame(index=self.df_out.index, data={'y': self.anomalies, 'trend': trend})
-        
-        
-        slope, intercept, r_value, p_value, std_err = stats.linregress(self.timestamps,self.anomalies)
-        
-        print('Linear Regression Results \n slope: {0} \n intercept: {1} \n r-value: {2} \n p-value: {3} \n std_err: {4} \n'.format(slope, intercept, r_value, p_value, std_err))
-        
-        print('Anomaly distribution results \n mean: {0}: \n std: {1} \n skew: {2} \n kurtosis: {3} \n'.format(self.df_out['anom'].mean(),self.df_out['anom'].std(),self.df_out['anom'].skew(),self.df_out['anom'].kurtosis()))
-        
-        skew_test = stats.skewtest(self.df_out['anom'].values)
-        kurt_test = stats.kurtosistest(self.df_out['anom'].values)
-        
-        print(' kurtosis test p-value: {0} \n skew test p-value: {1}'.format(round(kurt_test.pvalue,3), round(skew_test.pvalue,3)))
+            
+            self.anomalies=self.df_out['anom']/(10**6) #build a trendline from non-parametric model.
+            #y=df_out['z'].values #build a trendline from standardized model
+            
+            self.timestamps=self.df_out['timestamp']
+            ts_line = pd.ols(y=self.anomalies, x=self.timestamps, intercept = True)
+            trend = ts_line.predict(beta=ts_line.beta, x=self.timestamps) 
+            self.trendline_data = pd.DataFrame(index=self.df_out.index, data={'y': self.anomalies, 'trend': trend})
+            
+            
+            slope, intercept, r_value, p_value, std_err = stats.linregress(self.timestamps,self.anomalies)
+            
+            f.write('Linear Regression Results \n slope: {0} \n intercept: {1} \n r-value: {2} \n p-value: {3} \n std_err: {4} \n'.format(slope, intercept, r_value, p_value, std_err))
+            
+            f.write('Anomaly distribution results \n mean: {0}: \n std: {1} \n skew: {2} \n kurtosis: {3} \n'.format(self.df_out['anom'].mean(),self.df_out['anom'].std(),self.df_out['anom'].skew(),self.df_out['anom'].kurtosis()))
+            
+            skew_test = stats.skewtest(self.df_out['anom'].values)
+            kurt_test = stats.kurtosistest(self.df_out['anom'].values)
+            
+            f.write(' kurtosis test p-value: {0} \n skew test p-value: {1}'.format(round(kurt_test.pvalue,3), round(skew_test.pvalue,3)))
 
     def make_timeseries_plot(self):
-        
+        """
+        superimposes barchart: currently not being used
+        """
         fig0 = plt.figure(0,figsize=(7.8,5.7))
         #fig0.set_figheight(5)
         #fig0.set_figwidth(7.4)
         axes0 = plt.axes()
-        axes0.plot(self.timestamps.index.values, self.anomalies.values, linewidth = 2, alpha = .7)
+        axes0.plot(self.timestamps.index.values, self.anomalies.values, linewidth = 2, alpha = 1)
         
         axes0.plot(self.timestamps.index.values, self.trendline_data['trend'].values, linewidth = 2)
         axes0.set_title(self.series_name+': Time Series of Snow Cover Anomalies')
@@ -207,7 +214,29 @@ class timeseries_report:
                          r'trendline', 'yr. avg.'],
                          frameon = True)
         plt.savefig(os.path.join(self.series_name,self.series_name+'-averaged.png'),bbox_inches='tight')
+    
+    def make_timeseries_subplot(self):
+        fig0, axes0 = plt.subplots(2,1,figsize=(7.8,5.7), sharex = True)
+        axes0[0].plot(self.timestamps.index.values, self.anomalies.values, linewidth = 2, alpha = 1)
         
+        axes0[0].plot(self.timestamps.index.values, self.trendline_data['trend'].values, linewidth = 2)
+        axes0[0].set_title(self.series_name+': Time Series of Snow Cover Anomalies')
+        axes0[0].set_ylabel(r'Anom. [$10^{6} km^{2}$]')
+        #axes0[0].set_ylim([-2,2.5])
+        axes0[0].set_xlim([self.timestamps.index.min(),self.timestamps.index.max()])
+        
+        axes0[1].bar(self.yearly_anom_mean.index.values, self.yearly_anom_mean.values/10**5, color='w',width=365)
+        axes0_L = axes0[1].twinx()
+        #axes0[1].set_ylim([-2,2.5])
+        axes0_L.set_ylabel('Yearly avg. anom. [$10^{5} km^{2}$]')
+        axes0_L.yaxis.set_ticks([])
+        axes0_L.yaxis.set_label_coords(1.03,.8)
+        axes0[1].grid(False)
+        axes0[1].set_xlabel(r'Date')
+        axes0[0].legend([r'time series',
+                 r'trendline'],
+                 frameon = True)
+        plt.savefig(os.path.join(self.series_name,self.series_name+'-averaged.png'),bbox_inches='tight')
         
     def make_climate_plot(self):
         fig1 = plt.figure(1)

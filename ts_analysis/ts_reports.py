@@ -15,7 +15,7 @@ filenames = ['tibet_24_km.csv',
              'Alps-24km.csv',
              'Artic-24km.csv',
              'Sierras-24km.csv']
-
+#filenames = ['tibet_24_km.csv']
 
 for filename in filenames:
     
@@ -25,6 +25,6 @@ for filename in filenames:
     
     ts_report = timeseries_report(series_name,df, outlier_dates)
     #plt.show('all')
-    raw_input("Press Enter to continue...")
+    #raw_input("Press Enter to continue...")
     plt.close('all')
     
