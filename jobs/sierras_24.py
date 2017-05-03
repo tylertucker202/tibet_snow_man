@@ -6,8 +6,8 @@ if __name__ == '__main__':
     
     input_dict = get_sierras_24x24_param()
     make_grid = True
-    make_hdf5 = True
-    make_time_series_df = True
-    make_plots = True
+    make_hdf5 = False
+    make_time_series_df = False
+    make_plots = False
     
     run_job(input_dict, make_grid, make_hdf5, make_time_series_df, make_plots)

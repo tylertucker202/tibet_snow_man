@@ -115,7 +115,7 @@ class timeseries_report:
         df_climate['mean'] = rowMean
         df_climate['std'] = rowStd
         df_climate['counts'] = rowCounts
-        df_climate['dayofyear'] = map(lambda x: x[0],y)    
+        df_climate['dayofyear'] = map(lambda x: x[0],y)
         
         return df_climate
         

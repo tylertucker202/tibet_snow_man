@@ -1,0 +1,20 @@
+DEBUG:root:Start of log file
+INFO:root:making grids for: Sierras_24km
+DEBUG:root:initializing object
+DEBUG:root:initializing dataframe
+DEBUG:root:getting Latitude and Longitude arrays:
+DEBUG:root:lat array loaded
+DEBUG:root:long array loaded
+DEBUG:root:getting map with no snow and ice, used for uncompressed plots, as they don't distinguish between land and sea
+DEBUG:root:reading file: dry_planet_24km.asc
+INFO:root:data found at index: 30
+DEBUG:root:Start of log file
+INFO:root:making grids for: Sierras_24km
+DEBUG:root:initializing object
+DEBUG:root:initializing dataframe
+DEBUG:root:getting Latitude and Longitude arrays:
+DEBUG:root:lat array loaded
+DEBUG:root:long array loaded
+DEBUG:root:getting map with no snow and ice, used for uncompressed plots, as they don't distinguish between land and sea
+DEBUG:root:reading file: dry_planet_24km.asc
+INFO:root:data found at index: 30
