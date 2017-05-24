@@ -13,8 +13,7 @@ import re
 import logging
 import datetime
 import h5py
-import scipy.sparse as sparse
-#plt.ioff()
+
 from itertools import islice
 
         
@@ -25,9 +24,6 @@ class make_snow_hdf5:
         self.data_dir = data_dir
         self.output_dir = output_dir
         self.grid_size = grid_size        
-        
-        hdf5_name = os.path.basename(data_dir)
-        self.init_hdf5(hdf5_name)
     
     def __exit__(self):
         logging.debug('exiting class. closing hdf5 hdf5')
@@ -35,23 +31,22 @@ class make_snow_hdf5:
         
     def init_hdf5(self, hdf5_name):
         logging.debug('initializing hdf5')
-        
         full_name = os.path.join(self.output_dir, hdf5_name)
         self.fh5 = h5py.File(full_name+'.hdf5', "w")
-        
-        #create dataset body
-        self.fh5.create_dataset('snow_data',
-            (self.grid_size, self.grid_size,366),
-            dtype='i8', compression="lzf", 
-            fillvalue=np.nan)
+    
+    def close_hdf5(self):
+        self.fh5.flush()
+        self.fh5.close()
         
     def create_hdf5_group(self, year):
+        logging.debug('creating new hdf5 for year: {}'.format(year))
+        self.init_hdf5(year)
         logging.debug('initializing group for year: {}'.format(year))
         grp = self.fh5.create_group(year)
         grp.create_dataset("date", (366, ), dtype="S10", fillvalue="")
         grp.create_dataset("corrupted", (366, ), dtype=bool, fillvalue=False)
         grp.create_dataset("zipped_format", (366, ), dtype=bool, fillvalue=True)
-        grp.create_dataset("snow_data", (self.grid_size, self.grid_size,366), dtype='i8',compression="gzip", compression_opts=9)
+        grp.create_dataset("snow_data", (self.grid_size, self.grid_size,366), dtype='i8',compression="lzf")
         return grp
         
     def parse_timeseries(self):
@@ -70,6 +65,7 @@ class make_snow_hdf5:
 
                 input_dir = os.path.join(self.data_dir,folder_name)
                 self.add_data_sets_to_group(group, input_dir)
+                self.close_hdf5()
                 #df_year.to_csv(self.output_dir+folder_name+'.csv')
                 print('done and file saved, moving on from {0} '.format(folder_name))
 
@@ -80,7 +76,6 @@ class make_snow_hdf5:
     def add_data_sets_to_group(self,group, input_dir):
 
         logging.debug('entered add_rows_to_hdf5. adding snow and ice data to hdf5: in input_dir: {0}'.format(input_dir) )  
-
 
         if not os.path.exists(input_dir):
             logging.warning('directory does not exist: {0}'.format(input_dir))
@@ -99,7 +94,7 @@ class make_snow_hdf5:
                 group['date'][day_of_year_idx] = dset_name
 
                 self.add_group_datasets_to_hdf5(path,filename, group, day_of_year_idx)
-    
+                self.fh5.flush()
 
     def add_group_datasets_to_hdf5(self,path,filename, group, day_of_year_idx):
         logging.debug('inside add_group_datasets_to_hdf5 for index: {}'.format(day_of_year_idx))
@@ -133,18 +128,16 @@ class make_snow_hdf5:
         with gzip.open(os.path.join(path, filename), 'r') as f:    
             if nominally_formatted_bool:
     
-                for idx, line in enumerate(islice(f, start_line, None)):
-    
-                    line = line.strip('\n') #sometimes there is a newline
-                    line = line.replace('1','0')
-                    line = line.replace('2','0')
-                    int_line = map(lambda x: int(x) ,line)          
-                    
-                    #remove land and sea to save space
-                    #snow_line = [0 if x==1 or x==2 else x for x in int_line]
-                    snow_line = int_line
-                    
+                for idx, line in enumerate(islice(f, start_line, None)):            
                     try:
+                        line = line.strip('\n') #sometimes there is a newline
+                        line = line.replace('1','0')
+                        line = line.replace('2','0')
+                        int_line = map(lambda x: int(x) ,line)          
+                        
+                        #remove land and sea to save space
+                        #snow_line = [0 if x==1 or x==2 else x for x in int_line]
+                        snow_line = int_line
                         group['snow_data'][idx,:,day_of_year_idx] = snow_line
                     except:
                         logging.warning('problem occured when adding compressed format data to hdf5')
@@ -152,9 +145,10 @@ class make_snow_hdf5:
                         group['corrupted'][day_of_year_idx] = True
                         pass
                     
-                    #check if snow exists in middle row
+                    #check if snow or ice exists around north pole
                     if idx == self.grid_size/2:
-                        if not (4 in int_line) or (not 3 in int_line):
+                        current_grid = group['snow_data'][int(.7*self.grid_size/2):idx,int(.7*self.grid_size/2):int(1.2*self.grid_size/2),day_of_year_idx]
+                        if (not 4 in current_grid) or (not 3 in current_grid):
                             logging.warning('no snow or ice displayed on middle row...setting as corrupt')
                             group['corrupted'][day_of_year_idx] = True
 
@@ -162,19 +156,23 @@ class make_snow_hdf5:
             else:
                 int_body = []
                 for idx, line in enumerate(islice(f, start_line, None)):
-                    
-                    line = line.replace(' ','')
-                    line = line.strip('\n')
-                    line = line.replace('164','3')
-                    line = line.replace('165','4')
-                    int_body.append([int(c) for c in line])
+                
+                    try:
+                        line = line.replace(' ','')
+                        line = line.strip('\n')
+                        line = line.replace('164','3')
+                        line = line.replace('165','4')
+                        int_body.append([int(c) for c in line])
+                    except ValueError as err: 
+                        logging.warning('problem occured when creating int_body')
+                        logging.warning('error: {0}'.format(err))
+                        pass
                 try:
                     flat_body = [item for sublist in int_body for item in sublist]
                     body_m = np.matrix([flat_body])
                     body_m = body_m.reshape(1024,1024) #only occurs in 24km grid
                     group['snow_data'][:,:,day_of_year_idx]= body_m
                 except:
-                    pdb.set_trace()
                     logging.warning('problem occured when adding uncompressed format data to hdf5')
                     logging.warning('not going to add this data: {}'.format(filename))
                     pass   
@@ -185,39 +183,3 @@ class make_snow_hdf5:
         logging.debug('added to hdf5 for index: {}'.format(day_of_year_idx))        
         self.fh5.flush()
         
-if __name__ == '__main__':
-    
-    home_dir = os.getcwd()
-    input_data_dir = os.path.join(home_dir,'zip_files', '24km_test')
-    output_dir = os.path.join(os.getcwd(), os.pardir, 'output')
-    grid_size = 1024
-    
-    FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    logging.basicConfig(format=FORMAT,filename=os.path.join(output_dir,'make_snow_hdf5.log'),level=logging.DEBUG)
-    logging.debug('Start of log file')   
-    
-
-    logging.debug('init object')
-    snw_hdf5 = make_snow_hdf5(input_data_dir,output_dir,grid_size)
-    logging.debug('Parse series')
-    snw_hdf5.parse_timeseries()
-    
-    ###to be used for testing
-    fh5 = h5py.File('24km_test.hdf5', "r")
-    
-    #check if all keys have been added
-    fh5.keys()
-    
-    #check if 2013-242 is corrupted
-    fh5['2013'].keys()
-    fh5['2013']['corrupted'][0] #should be false
-    fh5['2013']['corrupted'][242-1] # should be true
-    
-    #check if 1997 is in zipped format
-    fh5['1997']['zipped_format'][127-1] #should be false
-    fh5['1997']['zipped_format'][35-1] #should be true
-    fh5['1997']['zipped_format'][36-1] #should be true
-    
-    #check if dates were placed in the right order
-    
-    
