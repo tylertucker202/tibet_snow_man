@@ -12,7 +12,7 @@ reload(logging)
 import sys
 sys.path.append(os.path.join(os.getcwd(), os.pardir))
 import h5py
-from make_snow_hdf5 import make_snow_hdf5
+from makeSnowHdf5 import makeSnowHdf5
 
 
 if __name__ == '__main__':
@@ -33,7 +33,7 @@ if __name__ == '__main__':
     
 
     logging.debug('init object')
-    snw_hdf5 = make_snow_hdf5(input_data_dir,output_dir,grid_size)
+    snw_hdf5 = makeSnowHdf5(input_data_dir,output_dir,grid_size)
     logging.debug('Parse series')
     snw_hdf5.parse_timeseries()
     

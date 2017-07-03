@@ -1,3 +1,6 @@
 .*
 *.pyc
 !/.gitignore
+*.log
+*.png
+*.csv
