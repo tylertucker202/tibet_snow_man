@@ -15,8 +15,7 @@ import numpy as np
 import pdb
 import matplotlib.pylab as plt
 sys.path.append(os.pardir)
-reload(logging)
-from region_parameters import get_4x4_param
+from region_parameters import get_24x24_param
 from mpl_toolkits.basemap import Basemap
 
 
@@ -58,7 +57,6 @@ class gridAndArea:
                                    compression='lzf')
                 fh5.flush()
                 logging.debug('lat matrix loaded')
-
                 logging.debug('lat array loaded')
 
             with open(os.path.join(self.DATA_DIR,
@@ -109,11 +107,6 @@ class gridAndArea:
                            dtype='float64',
                            fillvalue=np.nan,
                            compression='lzf')
-        fh5.create_dataset('areas',
-                           (self.GRID_SIZE, self.GRID_SIZE),
-                           dtype='float64',
-                           fillvalue=np.nan,
-                           compression='lzf')
         fh5.create_dataset('land_sea_values',
                            (self.GRID_SIZE, self.GRID_SIZE),
                            dtype='i8',
@@ -132,15 +125,15 @@ class gridAndArea:
         fh5 = h5py.File(self.HDF5_NAME, 'r+')
         lat_dset = fh5.get('lat')
         lon_dset = fh5.get('lon')
-        lat_centroid_dset = fh5.get('lon_centroid')
+        lat_centroid_dset = fh5.get('lat_centroid')
         lon_centroid_dset = fh5.get('lon_centroid')
 
-        for row in xrange(START_ROW, self.GRID_SIZE-1):
+        for row in range(START_ROW, self.GRID_SIZE-1):
             lat_seg = lat_dset[row: row+2, :]
             lon_seg = lon_dset[row: row+2, :]
             lat_mean = []
             lon_mean = []
-            for col in xrange(1, self.GRID_SIZE-1):
+            for col in range(1, self.GRID_SIZE-1):
                 try:
                     lat_points = lat_seg[0:2, col:col+2]  # gets 4 points
                     lat_mean.append(lat_points.mean())
@@ -186,7 +179,7 @@ class gridAndArea:
                     height=4000000,
                     resolution='c', lat_0=center[0], lon_0=center[1])
 
-        for idx in xrange(1, lat_centroid_dset.shape[0]):
+        for idx in range(1, lat_centroid_dset.shape[0]):
             if idx % 250 == 0:
                 logging.debug('on row: {0} '.format(idx))
                 logging.debug('flushing hdf5')
@@ -208,18 +201,17 @@ class gridAndArea:
         the 2nd to last row,
         2nd to last column.
         '''
-        pdb.set_trace()
         logging.debug('making area')
         fh5 = h5py.File(self.HDF5_NAME, 'r+')
         yy = fh5.get('y_centroid')
         xx = fh5.get('x_centroid')
         areas_dset = fh5.get('areas')
-        for row in xrange(1, (self.GRID_SIZE-1)):
+        for row in range(1, (self.GRID_SIZE-1)):
             row_areas = []
             # get a 2xn segment for the whole row
             xx_seg = xx[row-1:row+1, :]
             yy_seg = yy[row-1:row+1, :]
-            for col in xrange(1, (self.GRID_SIZE-1)):
+            for col in range(1, (self.GRID_SIZE-1)):
                 try:
                     inp_x = [xx_seg[1, col-1],
                              xx_seg[1, col],
@@ -275,8 +267,7 @@ class gridAndArea:
                       don\'t distinguish between land and sea""")
         logging.debug('reading file: {}'.format(filename))
         fh5 = h5py.File(self.HDF5_NAME, 'r+')
-        pdb.set_trace()
-        land_sea_values = fh5.get('land_sea')
+        land_sea_values = fh5.get('land_sea_values')
         with open(os.path.join(self.DATA_DIR, filename), 'r') as f:
             content = f.read()
             lines = content.split('\n')
@@ -300,7 +291,6 @@ class gridAndArea:
                 land_sea_values[i, :] = int_line
 
                 int_body[i] = int_line
-            pdb.set_trace()
 
         def rbg_convert(x):
             snow = (5, 5, 5)
@@ -325,8 +315,8 @@ class gridAndArea:
 
         if save:
             no_snow_matrix = np.matrix(int_body)
-            rbg_no_snow_matrix = map(rbg_convert, no_snow_matrix.flat)
-            RBG_ARRAY = np.array(rbg_no_snow_matrix, dtype='uint16')
+            rbg_no_snow_matrix = list(map(rbg_convert, no_snow_matrix.flat))
+            RBG_ARRAY = np.array(rbg_no_snow_matrix, dtype='uint8')
             self.rbg_no_snow_matrix = RBG_ARRAY.reshape((self.GRID_SIZE,
                                                          self.GRID_SIZE, 3))
             plt.ioff()
@@ -345,8 +335,8 @@ if __name__ == '__main__':
     logging.debug('\nStart of log file')
     home_dir = os.getcwd()
 
-    DATA_DIR = os.path.join(home_dir, os.pardir, 'data')
-    output_dict = get_4x4_param()
+    DATA_DIR = os.path.join(home_dir, 'data')
+    output_dict = get_24x24_param()
 
     GRID_SIZE = output_dict['grid_size']
     no_snow_planet_name = output_dict['no_snow_planet_name']
@@ -360,19 +350,19 @@ if __name__ == '__main__':
                      GRID_SIZE)
 
     # initialize h5. WARNING: THIS WILL ERASE THE EXISTING .H5
-    #ga.init_h5(LAT_GRID_FILENAME, LON_GRID_FILENAME)
+    ga.init_h5(LAT_GRID_FILENAME, LON_GRID_FILENAME)
 
     # make centroids
     """
     Large jobs are sometimes halted.
     START_ROW lets you continue where you left off."""
     START_ROW = 1
-    #ga.make_centroids(START_ROW)
+    ga.make_centroids(START_ROW)
 
     # make cartesian centroid coordinates
-    #ga.create_centroid_cartesian()
+    ga.create_centroid_cartesian()
 
     # make areas
-    #ga.make_areas()
+    ga.make_areas()
 
-    ga.make_no_snow_map(no_snow_planet_name, save=False)
+    ga.make_no_snow_map(no_snow_planet_name, save=True)

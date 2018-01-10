@@ -7,7 +7,8 @@ import logging
 import pdb
 from datetime import datetime, timedelta
 from ftplib import FTP, error_perm
-import urlparse
+from urllib.parse import urlparse
+#import urlparse
 import socket
 import gzip
 from itertools import islice, chain
@@ -60,10 +61,9 @@ class makeMongoDatabase(object):
         lon_centroid_dset = fh5.get('lon_centroid')
         x_centroid_dset = fh5.get('x_centroid')
         y_centroid_dset = fh5.get('y_centroid')
-        land_sea_dset = fh5.get('land_sea')
-        pdb.set_trace()
+        land_sea_dset = fh5.get('land_sea_values')
         records = []
-        for row in xrange(0, self.GRID_SIZE):
+        for row in range(0, self.GRID_SIZE):
             area_row = area_dset[row, :]
             lat_row = lat_dset[row, :]
             lon_row = lon_dset[row, :]
@@ -72,7 +72,7 @@ class makeMongoDatabase(object):
             x_centroid_row = x_centroid_dset[row, :]
             y_centroid_row = y_centroid_dset[row, :]
             land_sea_row = land_sea_dset[row, :]
-            for col in xrange(0, self.GRID_SIZE):
+            for col in range(0, self.GRID_SIZE):
                 if area_row[col] == 0.0 or np.isnan(area_row[col]):
                     continue
                 area = area_row[col]
@@ -157,7 +157,7 @@ class makeMongoDatabase(object):
             with open(day_filename, 'w') as fobj:
                 ftp.retrbinary('RETR ' + day_filename, fobj.write)
         except:
-            print 'Error in writing file: {}'.format(day_filename)
+            print('Error in writing file: {}'.format(day_filename))
         ftp.quit()
         return day_filename
 
@@ -193,12 +193,8 @@ class makeMongoDatabase(object):
         def make_dir_list(ftp):
             try:
                 files = ftp.nlst()
-            except error_perm, resp:
-                if str(resp) == '550 No files found':
-                    logging.warning('no files inside '
-                                    'ftp directory: {}'.format(ftp.pwd()))
-                else:
-                    raise
+            except error_perm:
+                raise
             return files
 
         year_files = make_dir_list(ftp)
