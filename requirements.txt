@@ -2,7 +2,7 @@ backports-abc==0.5
 backports.shutil-get-terminal-size==1.0.0
 backports.ssl-match-hostname==3.4.0.2
 basemap==1.0.7
-bleach==1.5.0
+bleach==3.3.0
 blinker==1.4
 configparser==3.5.0
 cycler==0.10.0
