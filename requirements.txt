@@ -32,7 +32,7 @@ nbconvert==5.1.1
 nbformat==4.2.0
 networkx==1.11
 notebook==4.3.1
-numpy==1.11.3
+numpy==1.22.0
 pandas==0.19.2
 pandocfilters==1.4.1
 pathlib2==2.2.0
